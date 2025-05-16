@@ -10,6 +10,8 @@ import { swaggerDocs } from "./swagger";
 import { corsConfig } from "./infrastructure/config/cors";
 import userModel from "./infrastructure/persistence/models/user.model";
 import { shipmentModel } from "./infrastructure/persistence/models/shipment.model";
+import { routeModel } from "./infrastructure/persistence/models/route.model";
+import { transporterModel } from "./infrastructure/persistence/models/transporter.model";
 
 const app = express();
 //Cors
@@ -21,6 +23,13 @@ app.use(cors(corsConfig));
   try {
     console.log("Tabla de usuarios inicializada");
     await userModel.createTable();
+    
+    console.log("Tabla de rutas inicializada");
+    await routeModel.createTable();
+    
+    console.log("Tabla de transporte inicializada");
+    await transporterModel.createTable();
+    
     console.log("Tabla de envíos inicializada");
     await shipmentModel.createTable();
   } catch (error) {

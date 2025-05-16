@@ -6,16 +6,11 @@ import {
   ShipmentStatus,
 } from "../../interfaces/order/shipment.interface";
 
-export interface CreateShipmentDTO {
-  userId: number;
-  packageInfo: PackageInfo;
-  destinationAddress: Address;
-  exitAddress: Address;
-}
-
 export interface ShipmentDTO {
   id?: number;
   userId: number;
+  routeId?: number;
+  transporterId?: number;
   packageInfo: PackageInfo;
   exitAddress: Address;
   destinationAddress: Address;
@@ -25,12 +20,17 @@ export interface ShipmentDTO {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export interface CreateShipmentDTO
+  extends Pick<
+    ShipmentDTO,
+    "userId" | "packageInfo" | "destinationAddress" | "exitAddress"
+  > {}
 
-export interface ShipmentResponseDTO {
-  id: number;
-  trackingNumber: string;
-  status: ShipmentStatus;
-  estimatedDeliveryDate?: Date;
+export interface ShipmentResponseDTO
+  extends Pick<ShipmentDTO, "id" | "status" | "estimatedDeliveryDate"> {
   cost: number;
   message: string;
 }
+
+export interface AssingShipmentDTO
+  extends Pick<ShipmentDTO, "id" | "routeId" | "transporterId"> {}

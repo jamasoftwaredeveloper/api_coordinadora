@@ -3,6 +3,7 @@ import { NotificationService } from "../../interfaces/services/notification.serv
 import { UserRepository } from "../../interfaces/repositories/user.repository.interface";
 import { Result } from "../common/result";
 import {
+  AssingShipmentDTO,
   CreateShipmentDTO,
   ShipmentDTO,
   ShipmentResponseDTO,
@@ -10,13 +11,20 @@ import {
 import { ShipmentStatus } from "../../interfaces/order/shipment.interface";
 import { Shipment } from "../../domain/order/shipment.entity";
 import { AddressValidationService } from "../../infrastructure/services/address-validation.service.interface";
+import { RouteRepository } from "../../interfaces/repositories/route.repository.interface";
+import { RouteDTO } from "../dto/route.dto";
+import { TransporterDTO } from "../dto/transporter.dto";
+import { ValidateWeightCapacityService } from "../../interfaces/services/validateWeightCapacity.service.interface";
+
 
 export class ShipmentService {
   constructor(
     private shipmentRepository: ShipmentRepository,
     private userRepository: UserRepository,
     private notificationService: NotificationService,
-    private addressValidationService: AddressValidationService
+    private addressValidationService: AddressValidationService,
+    private routeRepository: RouteRepository,
+    private validateWeightCapacityService: ValidateWeightCapacityService
   ) {}
 
   async createShipment(
@@ -152,6 +160,73 @@ export class ShipmentService {
         return Result.fail("No se pudo actualizar el estado del envío", 404);
       }
       return Result.ok(shipment);
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+      return Result.fail("Error al obtener los envíos del usuario", 500);
+    }
+  }
+
+  async allRoutes(): Promise<RouteDTO[]> {
+    try {
+      return await this.routeRepository.allRoutes();
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+    }
+  }
+  async allTransporters(): Promise<TransporterDTO[]> {
+    try {
+      return await this.routeRepository.allTransporters();
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+    }
+  }
+
+  async assignRouteToShipment({
+    id,
+    routeId,
+    transporterId,
+  }: AssingShipmentDTO): Promise<Result<boolean>> {
+    try {
+      const shipment = await this.shipmentRepository.findById(id);
+
+      console.log("shipment", shipment.packageInfo);
+      if (!shipment) {
+        return Result.fail("No se encontró el envío", 404);
+      }
+      const transporter = await this.routeRepository.findTransporterById(
+        transporterId
+      );
+
+      if (!transporter) {
+        return Result.fail("No se encontró el transportista", 404);
+      }
+
+      const packageAllowed =
+        this.validateWeightCapacityService.validateWeightCapacity(
+          { weight: shipment.packageInfo.weight },
+          { volumeCapacity: transporter.vehicle_capacity }
+        );
+
+      if (!packageAllowed) {
+        return Result.fail(
+          "El paquete excede la capacidad del transportista",
+          400
+        );
+      }
+
+      const route = await this.routeRepository.findAvailableRoutes();
+      if (!route) {
+        return Result.fail("No se encontró la ruta", 404);
+      }
+      const result = await this.routeRepository.assignRouteToShipment({
+        id,
+        routeId,
+        transporterId,
+      });
+      if (!result) {
+        return Result.fail("No se pudo asignar la ruta al envío", 400);
+      }
+      return Result.ok(result);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
       return Result.fail("Error al obtener los envíos del usuario", 500);

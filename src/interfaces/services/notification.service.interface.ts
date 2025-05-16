@@ -9,5 +9,4 @@ export interface NotificationPayload {
 
 export interface NotificationService {
   sendEmail(payload: NotificationPayload): Promise<boolean>;
-  sendWhatsapp(phoneNumber: string, message: string): Promise<boolean>;
 }

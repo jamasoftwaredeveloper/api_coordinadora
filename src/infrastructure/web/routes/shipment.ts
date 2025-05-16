@@ -152,6 +152,13 @@ router.get(
  *     tags: [Ordenes de envio]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: trackingNumber
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Número de tracking para buscar envíos
  *     responses:
  *       200:
  *         description: Envíos obtenidos con éxito
@@ -200,9 +207,96 @@ router.get(
 
 router.put(
   "/api/shipment/updateStatus",
-  validateShipmentMiddleware,
   validateBodyAuth.authorization,
   shipmentController.updateStatus.bind(shipmentController)
 );
+/**
+ * @swagger
+ * /api/shipment/assignRoute:
+ *   put:
+ *     summary: Asigna una ruta a un envío
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: number
+ *                 description: ID del envío
+ *               routeId:
+ *                 type: number
+ *                 description: ID de la ruta
+ *               transporterId:
+ *                 type: number
+ *                 description: ID del transportista
+ *     responses:
+ *       200:
+ *         description: Ruta asignada con éxito
+ *       400:
+ *         description: Error al asignar la ruta
+ *       401:
+ *         description: Usuario no autenticado
+ */ 
+router.put(
+  "/api/shipment/assignRoute",
+  validateBodyAuth.authorization,
+  shipmentController.assignRouteToShipment.bind(shipmentController)
+);
+
+
+
+
+
+/**
+ * @swagger
+ * /api/shipment/allRoutes:
+ *   get:
+ *     summary: Obtiene todas las rutas
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Rutas obtenidas con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/allRoutes",
+  validateBodyAuth.authorization,
+  shipmentController.allRoutes.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/allTransporters:
+ *   get:
+ *     summary: Obtiene todos los transportistas
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Transportistas obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/allTransporters",
+  validateBodyAuth.authorization,
+  shipmentController.allTransporters.bind(shipmentController)
+);
+
+
+
 
 export default router;

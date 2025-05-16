@@ -1,0 +1,28 @@
+{
+    "userId": 1,
+    "packageInfo": {
+      "weight": 11,
+      "height": 15,
+      "width": 12,
+      "length": 12,
+      "productType": "Libro"
+    },
+    "exitAddress": {
+      "street": "Calle 4 # 7-41",
+      "city": "Pradera",
+      "state": "Valle del cauca",
+      "postalCode": "763554",
+      "country": "Colombia",
+      "recipientName": "Juan fddf",
+      "recipientPhone": "3156607568"
+    },
+    "destinationAddress": {
+      "street": "Calle 5 # 13-28",
+      "city": "Pradera",
+      "state": "Valle del cauca",
+      "postalCode": "763550",
+      "country": "Colombia",
+      "recipientName": "Juan",
+      "recipientPhone": "3156607568"
+    }
+  }

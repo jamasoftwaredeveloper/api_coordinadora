@@ -4,10 +4,7 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../../../interfaces/auth/IGetUser";
 import { ShipmentService } from "../../../application/shipping/shipment.service";
 import { container } from "../../../infrastructure/container";
-import {
-  ShipmentRequest,
-  ShipmentUpdateStatusRequest,
-} from "../../../interfaces/order/shipment.interface";
+import { ShipmentUpdateStatusRequest } from "../../../interfaces/order/shipment.interface";
 import { ShipmentDTO } from "../../../application/dto/shipment.dto";
 
 export class ShipmentController {
@@ -51,11 +48,9 @@ export class ShipmentController {
       res.status(500).json({ message: "Error interno del servidor" });
     }
   }
-
   async getUserShipments(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = Number(req.user_id);
-
       if (!userId) {
         res.status(401).json({ message: "Usuario no autenticado" });
         return;
@@ -81,12 +76,11 @@ export class ShipmentController {
   }
 
   async findByTrackingNumber(
-    req: ShipmentRequest,
+    req: Request,
     res: Response
   ): Promise<ShipmentDTO> {
     try {
-      const trackingNumber = req.trackingNumber;
-
+      const trackingNumber = req.query.trackingNumber as string;
       if (!trackingNumber) {
         res.status(401).json({ message: "Usuario no autenticado" });
         return;
@@ -113,13 +107,9 @@ export class ShipmentController {
     }
   }
 
-  async updateStatus(
-    req: ShipmentUpdateStatusRequest,
-    res: Response
-  ): Promise<boolean> {
+  async updateStatus(req: Request, res: Response): Promise<boolean> {
     try {
-      const id = req.id;
-      const status = req.status;
+      const { id, status }: ShipmentUpdateStatusRequest = req.body;
       const result = await this.shipmentService.updateStatus(id, status);
       if (result.isError) {
         res.status(result.statusCode || 400).json({
@@ -129,11 +119,76 @@ export class ShipmentController {
       }
 
       res.status(200).json({
-        message: "Envíos obtenidos con éxito",
+        message: "Estado del envio cambiado con éxito",
         shipments: result.data,
       });
     } catch (error) {
       console.error("Error en updateStatus:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async assignRouteToShipment(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, routeId, transporterId } = req.body;
+      const result = await this.shipmentService.assignRouteToShipment({
+        id,
+        routeId,
+        transporterId,
+      });
+
+      if (result.isError) {
+        res.status(result.statusCode || 400).json({
+          message: result.message,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        message: "Ruta asignada con éxito",
+        shipments: result.data,
+      });
+    } catch (error) {
+      console.error("Error en assignRouteToShipment:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async allRoutes(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+      const result = await this.shipmentService.allRoutes();
+
+      res.status(200).json({
+        message: "Rutas disponibles éxito",
+        routes: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async allTransporters(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+
+      const result = await this.shipmentService.allTransporters();
+
+      res.status(200).json({
+        message: "Transportes disponible disponibles éxito",
+        shipments: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
       res.status(500).json({ message: "Error interno del servidor" });
     }
   }

@@ -7,9 +7,11 @@ import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
 import { ShipmentStatus } from "../../../interfaces/order/shipment.interface";
 
 // Interfaces para tipar los resultados
-interface ShipmentRow extends RowDataPacket, Omit<ShipmentDTO, 'packageInfo' | 'destinationAddress'> {
-  package_info: string;  // JSON string
-  destination_address: string;  // JSON string
+interface ShipmentRow
+  extends RowDataPacket,
+    Omit<ShipmentDTO, "packageInfo" | "destinationAddress"> {
+  package_info: string; // JSON string
+  destination_address: string; // JSON string
 }
 
 export class ShipmentModel {
@@ -24,6 +26,8 @@ export class ShipmentModel {
     const sql = `
       CREATE TABLE IF NOT EXISTS shipments (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        route_id INT DEFAULT NULL,
+        transporter_id INT DEFAULT NULL,
         user_id INT NOT NULL,
         package_info JSON NOT NULL,
         exit_address JSON NOT NULL,
@@ -33,7 +37,9 @@ export class ShipmentModel {
         estimated_delivery_date DATETIME,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (route_id) REFERENCES routes(id),
+        FOREIGN KEY (transporter_id) REFERENCES transporters(id)
       )
     `;
 
@@ -47,14 +53,14 @@ export class ShipmentModel {
 
   // Crear un nuevo envío
   public async create(shipmentData: ShipmentDTO): Promise<ShipmentDTO> {
-    const { 
-      userId, 
-      packageInfo, 
-      destinationAddress, 
+    const {
+      userId,
+      packageInfo,
+      destinationAddress,
       exitAddress,
-      status, 
-      trackingNumber, 
-      estimatedDeliveryDate 
+      status,
+      trackingNumber,
+      estimatedDeliveryDate,
     } = shipmentData;
 
     const sql = `
@@ -71,12 +77,12 @@ export class ShipmentModel {
         JSON.stringify(exitAddress),
         status,
         trackingNumber,
-        estimatedDeliveryDate
+        estimatedDeliveryDate,
       ]);
 
       return {
         ...shipmentData,
-        id: result.insertId
+        id: result.insertId,
       };
     } catch (error) {
       throw new DatabaseError("Error creating shipment", error);
@@ -89,22 +95,22 @@ export class ShipmentModel {
 
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [id]);
-      
+
       if (!rows[0]) return null;
-      
+
       const shipment = rows[0];
-      
+
       return {
         id: shipment.id,
         userId: shipment.user_id,
-        packageInfo: JSON.parse(shipment.package_info),
-        destinationAddress: JSON.parse(shipment.destination_address),
-        exitAddress: JSON.parse(shipment.exit_address),
+        packageInfo:this.safeParse(shipment.package_info),
+        destinationAddress:this.safeParse(shipment.destination_address),
+        exitAddress:this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
         trackingNumber: shipment.tracking_number,
         estimatedDeliveryDate: shipment.estimated_delivery_date,
         createdAt: shipment.created_at,
-        updatedAt: shipment.updated_at
+        updatedAt: shipment.updated_at,
       };
     } catch (error) {
       throw new DatabaseError("Error finding shipment by ID", error);
@@ -112,63 +118,91 @@ export class ShipmentModel {
   }
 
   // Encontrar envío por número de seguimiento
-  public async findByTrackingNumber(trackingNumber: string): Promise<ShipmentDTO | null> {
+  public async findByTrackingNumber(
+    trackingNumber: string
+  ): Promise<ShipmentDTO | null> {
     const sql = `SELECT * FROM shipments WHERE tracking_number = ?`;
 
     try {
-      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [trackingNumber]);
-      
+      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [
+        trackingNumber,
+      ]);
+
       if (!rows[0]) return null;
-      
+
       const shipment = rows[0];
-      
+
+      // Verificar si ya son objetos para evitar JSON.parse innecesario
+
       return {
         id: shipment.id,
         userId: shipment.user_id,
-        packageInfo: JSON.parse(shipment.package_info),
-        destinationAddress: JSON.parse(shipment.destination_address),
-        exitAddress: JSON.parse(shipment.exit_address),
+        packageInfo: this.safeParse(shipment.package_info),
+        destinationAddress: this.safeParse(shipment.destination_address),
+        exitAddress: this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
         trackingNumber: shipment.tracking_number,
         estimatedDeliveryDate: shipment.estimated_delivery_date,
         createdAt: shipment.created_at,
-        updatedAt: shipment.updated_at
+        updatedAt: shipment.updated_at,
       };
     } catch (error) {
-      throw new DatabaseError("Error finding shipment by tracking number", error);
+      throw new DatabaseError(
+        "Error finding shipment by tracking number",
+        error
+      );
     }
   }
 
   // Encontrar envíos por ID de usuario
   public async findByUserId(userId: number): Promise<ShipmentDTO[]> {
+    console.log(`Finding shipments for user ID: ${userId}`);
+
     const sql = `SELECT * FROM shipments WHERE user_id = ?`;
 
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [userId]);
-      
-      return rows.map(shipment => ({
+
+      return rows.map((shipment) => ({
         id: shipment.id,
         userId: shipment.user_id,
-        packageInfo: JSON.parse(shipment.package_info),
-        destinationAddress: JSON.parse(shipment.destination_address),
-        exitAddress: JSON.parse(shipment.exit_address),
+        packageInfo: this.safeParse(shipment.package_info),
+        destinationAddress: this.safeParse(shipment.destination_address),
+        exitAddress: this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
         trackingNumber: shipment.tracking_number,
         estimatedDeliveryDate: shipment.estimated_delivery_date,
         createdAt: shipment.created_at,
-        updatedAt: shipment.updated_at
+        updatedAt: shipment.updated_at,
       }));
     } catch (error) {
       throw new DatabaseError("Error finding shipments by user ID", error);
     }
   }
 
+  // Método auxiliar para parsear JSON de manera segura
+  private safeParse(data: string | null): any {
+    if (!data) return null;
+    try {
+      return typeof data === "string" ? JSON.parse(data) : data;
+    } catch (error) {
+      console.error("Error parsing JSON:", data, error);
+      return null;
+    }
+  }
+
   // Actualizar estado del envío
-  public async updateStatus(id: number, status: ShipmentStatus): Promise<boolean> {
+  public async updateStatus(
+    id: number,
+    status: ShipmentStatus
+  ): Promise<boolean> {
     const sql = `UPDATE shipments SET status = ? WHERE id = ?`;
 
     try {
-      const [result] = await this.pool.execute<ResultSetHeader>(sql, [status, id]);
+      const [result] = await this.pool.execute<ResultSetHeader>(sql, [
+        status,
+        id,
+      ]);
       return result.affectedRows > 0;
     } catch (error) {
       throw new DatabaseError("Error updating shipment status", error);
@@ -193,18 +227,18 @@ export class ShipmentModel {
 
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql);
-      
-      return rows.map(shipment => ({
+
+      return rows.map((shipment) => ({
         id: shipment.id,
         userId: shipment.user_id,
-        packageInfo: JSON.parse(shipment.package_info),
-        destinationAddress: JSON.parse(shipment.destination_address),
-        exitAddress: JSON.parse(shipment.exit_address),
+        packageInfo: this.safeParse(shipment.package_info),
+        destinationAddress: this.safeParse(shipment.destination_address),
+        exitAddress: this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
         trackingNumber: shipment.tracking_number,
         estimatedDeliveryDate: shipment.estimated_delivery_date,
         createdAt: shipment.created_at,
-        updatedAt: shipment.updated_at
+        updatedAt: shipment.updated_at,
       }));
     } catch (error) {
       throw new DatabaseError("Error finding all shipments", error);
