@@ -2,10 +2,14 @@
 import express from "express"; //ESM EcmaScript module system
 import cors from "cors";
 import "dotenv/config";
-import router from "./infrastructure/web/routes/auth";
+// Importar las rutas
+import authRouter from "./infrastructure/web/routes/auth";
+import shipmentRouter from "./infrastructure/web/routes/shipment";
 import { swaggerDocs } from "./swagger";
-import userEntity from "./domain/auth/user.entity";
+
 import { corsConfig } from "./infrastructure/config/cors";
+import userModel from "./infrastructure/persistence/models/user.model";
+import { shipmentModel } from "./infrastructure/persistence/models/shipment.model";
 
 const app = express();
 //Cors
@@ -14,18 +18,20 @@ const port = parseInt(process.env.PORT || "4000", 10);
 swaggerDocs(app, port);
 app.use(cors(corsConfig));
 (async () => {
-    try {
-      await userEntity.createTable();
-      console.log('Tabla de usuarios inicializada');
-    } catch (error) {
-      console.error('Error al inicializar tabla de usuarios:', error);
-    }
-  })();
+  try {
+    console.log("Tabla de usuarios inicializada");
+    await userModel.createTable();
+    console.log("Tabla de envíos inicializada");
+    await shipmentModel.createTable();
+  } catch (error) {
+    console.error("Error al inicializar tabla de usuarios:", error);
+  }
+})();
 
 // routes
 //Leer datos de json
 app.use(express.json());
-app.use("/", router);
-
+app.use("/", authRouter);
+app.use("/", shipmentRouter); // Rutas relacionadas con envíos
 
 export default app;

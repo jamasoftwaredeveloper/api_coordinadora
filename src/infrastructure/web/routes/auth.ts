@@ -44,7 +44,7 @@ const router = Router();
  *       201:
  *         description: Usuario creado exitosamente
  *       409:
- *         description: El email o el handle ya están en uso
+ *         description: El email ya están en uso
  *       500:
  *         description: Error del servidor
  */

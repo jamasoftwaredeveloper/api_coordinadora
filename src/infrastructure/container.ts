@@ -2,6 +2,10 @@ import { UserRepositoryImpl } from "./persistence/repositories/user.repository.i
 import { JwtServiceImpl } from "./services/jwt.service.impl";
 import { AuthService } from "../application/auth/auth.service";
 import { AuthUtils } from "../domain/services/auth.utils";
+import { ShipmentRepositoryImpl } from "./persistence/repositories/shipment.repository.impl";
+import { NotificationServiceImpl } from "./services/notification.service.impl";
+import { AddressValidationServiceImpl } from "./services/address-validation.service.impl";
+import { ShipmentService } from "../application/shipping/shipment.service";
 
 
 class Container {
@@ -14,19 +18,33 @@ class Container {
   private registerServices(): void {
     // Repositorios
     const userRepository = new UserRepositoryImpl();
-    
+    const shipmentRepository = new ShipmentRepositoryImpl();
+
     // Servicios de utilidad
     const jwtService = new JwtServiceImpl();
     const authUtils = new AuthUtils();
 
+    const notificationService = new NotificationServiceImpl();
+    const addressValidationService = new AddressValidationServiceImpl();
+
     // Servicios de aplicación
     const authService = new AuthService(userRepository, authUtils, jwtService);
+    const shipmentService = new ShipmentService(
+      shipmentRepository,
+      userRepository,
+      notificationService,
+      addressValidationService
+    );
 
     // Registrar servicios
     this.services.set("UserRepository", userRepository);
     this.services.set("JwtService", jwtService);
     this.services.set("AuthUtils", authUtils);
     this.services.set("AuthService", authService);
+    this.services.set("NotificationService", notificationService);
+    this.services.set("AddressValidationService", addressValidationService);
+    this.services.set("AuthService", authService);
+    this.services.set("ShipmentService", shipmentService);
   }
 
   resolve(name: string): any {

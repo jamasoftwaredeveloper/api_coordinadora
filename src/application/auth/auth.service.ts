@@ -1,8 +1,8 @@
 import { AuthUtils } from "../../domain/services/auth.utils";
-import { UserDTO } from "../../interfaces/auth/IUser";
 import { UserRepository } from "../../interfaces/repositories/user.repository.interface";
 import { JwtService } from "../../interfaces/services/jwt.service.interface";
 import { Result } from "../common/result";
+import { UserDTO } from "../dto/user.dto";
 
 export class AuthService {
   constructor(

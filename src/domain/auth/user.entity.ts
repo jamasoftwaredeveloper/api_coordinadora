@@ -1,17 +1,29 @@
 // src/models/User.ts
-import { Pool, RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import IUser from "../../interfaces/auth/IUser";
-import { DatabaseError } from "../../interfaces/errors/DatabaseError";
-import { getDbPool } from "../../infrastructure/config/db";
+import UserEntity from "../../interfaces/auth/user.interface";
 
-// Interfaces para tipar los resultados
-interface UserRow extends RowDataPacket, IUser {}
+export class User implements UserEntity {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  created_at?: Date;
+  updated_at?: Date;
 
-class UserModel {
+  constructor(data: UserEntity) {
+    this.id = data.id;
+    this.name = data.name;
+    this.email = data.email;
+    this.password = data.password;
+    this.created_at = data.created_at;
+    this.updated_at = data.updated_at;
+  }
+}
+/*
   private pool: Pool;
   constructor() {
     this.pool = getDbPool();
   }
+ 
   // Crear la tabla de usuarios si no existe
   public async createTable(): Promise<ResultSetHeader> {
     const sql = `
@@ -35,8 +47,8 @@ class UserModel {
 
   // Crear un nuevo usuario
   public async create(
-    userData: Omit<IUser, "id" | "created_at" | "updated_at">
-  ): Promise<IUser> {
+    userData: Omit<UserEntity, "id" | "created_at" | "updated_at">
+  ): Promise<UserEntity> {
     const { name, email, password } = userData;
 
     const sql = `
@@ -63,7 +75,7 @@ class UserModel {
   }
 
   // Encontrar usuario por ID
-  public async findById(id: number): Promise<IUser | null> {
+  public async findById(id: number): Promise<UserEntity | null> {
     const sql = `
       SELECT id, name, email, created_at, updated_at 
       FROM users 
@@ -79,7 +91,7 @@ class UserModel {
   }
 
   // Encontrar usuario por email (útil para autenticación)
-  public async findByEmail(email: string): Promise<IUser | null> {
+  public async findByEmail(email: string): Promise<UserEntity | null> {
     const sql = `SELECT * FROM users WHERE email = ?`;
 
     try {
@@ -120,7 +132,7 @@ class UserModel {
   }
 
   // Listar todos los usuarios
-  public async findAll(): Promise<IUser[]> {
+  public async findAll(): Promise<UserEntity[]> {
     const sql = `
       SELECT id, name, email, created_at, updated_at 
       FROM users
@@ -133,6 +145,7 @@ class UserModel {
       throw new DatabaseError("Error finding all users", error);
     }
   }
-}
+
 
 export default new UserModel();
+*/

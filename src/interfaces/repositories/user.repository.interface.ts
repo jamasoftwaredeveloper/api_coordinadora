@@ -1,4 +1,5 @@
-import { UserDTO } from "../auth/IUser";
+import { UserDTO } from "../../application/dto/user.dto";
+
 
 export interface UserRepository {
   findById(id: number): Promise<UserDTO | null>;

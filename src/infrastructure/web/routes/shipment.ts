@@ -1,0 +1,208 @@
+import { Router } from "express";
+import { validateBodyAuth } from "../middlewares/auth/registerValidation";
+import { shipmentController } from "../controllers/shipment.controller";
+import { validateShipmentMiddleware } from "../middlewares/shipment/validate-shipment.middleware";
+const router = Router();
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Ordenes de envio
+ *     description: Endpoints para envios
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+/**
+ * @swagger
+ * /api/shipment:
+ *   post:
+ *     summary: Registra una orden de envío
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: number
+ *               packageInfo:
+ *                 type: object
+ *                 description: "Información del paquete"
+ *                 properties:
+ *                   weight:
+ *                     type: number
+ *                     description: Peso del paquete
+ *                   height:
+ *                     type: number
+ *                     description: Altura del paquete
+ *                   width:
+ *                     type: number
+ *                     description: Ancho del paquete
+ *                   length:
+ *                     type: number
+ *                     description: Largo del paquete
+ *                   productType:
+ *                     type: string
+ *                     description: Tipo de producto
+ *               exitAddress:
+ *                 type: object
+ *                 description: "Dirección de salida"
+ *                 properties:
+ *                   street:
+ *                     type: string
+ *                     description: "Calle de la dirección"
+ *                   city:
+ *                     type: string
+ *                     description: "Ciudad de destino"
+ *                   state:
+ *                     type: string
+ *                     description: "Estado o provincia"
+ *                   postalCode:
+ *                     type: string
+ *                     description: "Código postal"
+ *                   country:
+ *                     type: string
+ *                     description: "País de destino"
+ *                   recipientName:
+ *                     type: string
+ *                     description: "Nombre del destinatario"
+ *                   recipientPhone:
+ *                     type: string
+ *                     description: "Teléfono del destinatario"
+ *               destinationAddress:
+ *                 type: object
+ *                 description: "Dirección de destino"
+ *                 properties:
+ *                   street:
+ *                     type: string
+ *                     description: "Calle de la dirección"
+ *                   city:
+ *                     type: string
+ *                     description: "Ciudad de destino"
+ *                   state:
+ *                     type: string
+ *                     description: "Estado o provincia"
+ *                   postalCode:
+ *                     type: string
+ *                     description: "Código postal"
+ *                   country:
+ *                     type: string
+ *                     description: "País de destino"
+ *                   recipientName:
+ *                     type: string
+ *                     description: "Nombre del destinatario"
+ *                   recipientPhone:
+ *                     type: string
+ *                     description: "Teléfono del destinatario"
+ *     responses:
+ *       201:
+ *         description: "Orden de envío creada con éxito"
+ *       409:
+ *         description: "Conflicto: Datos ya existentes"
+ *       500:
+ *         description: "Error del servidor"
+ */
+router.post(
+  "/api/shipment",
+  validateShipmentMiddleware,
+  validateBodyAuth.authorization,
+  shipmentController.createShipment.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/userShipments:
+ *   get:
+ *     summary: Obtiene los envios de un usuario
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Envíos obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/userShipments",
+  validateBodyAuth.authorization,
+  shipmentController.getUserShipments.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/trackingNumber:
+ *   get:
+ *     summary: Obtiene los envios por trackingNumber
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Envíos obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/trackingNumber",
+  validateBodyAuth.authorization,
+  shipmentController.findByTrackingNumber.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/updateStatus:
+ *   put:
+ *     summary: Actualiza el estado de un envío
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: number
+ *                 description: ID del envío
+ *               status:
+ *                 type: string
+ *                 description: Nuevo estado del envío
+ *     responses:
+ *       200:
+ *         description: Estado actualizado con éxito
+ *       400:
+ *         description: Error al actualizar el estado
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+router.put(
+  "/api/shipment/updateStatus",
+  validateShipmentMiddleware,
+  validateBodyAuth.authorization,
+  shipmentController.updateStatus.bind(shipmentController)
+);
+
+export default router;
