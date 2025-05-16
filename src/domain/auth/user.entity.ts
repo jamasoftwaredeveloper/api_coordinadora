@@ -1,19 +1,17 @@
 // src/models/User.ts
 import { Pool, RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import config from "../config/db";
-import IUser from "../interfaces/auth/IUser";
-import { DatabaseError } from "../interfaces/errors/DatabaseError";
+import IUser from "../../interfaces/auth/IUser";
+import { DatabaseError } from "../../interfaces/errors/DatabaseError";
+import { getDbPool } from "../../infrastructure/config/db";
 
 // Interfaces para tipar los resultados
 interface UserRow extends RowDataPacket, IUser {}
 
 class UserModel {
   private pool: Pool;
-
   constructor() {
-    this.pool = config.getPool();
+    this.pool = getDbPool();
   }
-
   // Crear la tabla de usuarios si no existe
   public async createTable(): Promise<ResultSetHeader> {
     const sql = `

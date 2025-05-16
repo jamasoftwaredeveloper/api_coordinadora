@@ -2,10 +2,10 @@
 import express from "express"; //ESM EcmaScript module system
 import cors from "cors";
 import "dotenv/config";
-import router from "./routes/auth";
+import router from "./infrastructure/web/routes/auth";
 import { swaggerDocs } from "./swagger";
-import { corsConfig } from "./config/cors";
-import User from "./models/User";
+import userEntity from "./domain/auth/user.entity";
+import { corsConfig } from "./infrastructure/config/cors";
 
 const app = express();
 //Cors
@@ -15,7 +15,7 @@ swaggerDocs(app, port);
 app.use(cors(corsConfig));
 (async () => {
     try {
-      await User.createTable();
+      await userEntity.createTable();
       console.log('Tabla de usuarios inicializada');
     } catch (error) {
       console.error('Error al inicializar tabla de usuarios:', error);

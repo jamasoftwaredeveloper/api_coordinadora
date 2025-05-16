@@ -1,5 +1,5 @@
 import { body, validationResult } from "express-validator";
-import { verifyToken } from "../../utils/jwt";
+import { verifyToken } from "../../../../utils/jwt";
 
 // Middleware de validación para las operaciones de SpecialPrice
 export const validateBodyAuth = {

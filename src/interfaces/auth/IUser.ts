@@ -8,7 +8,12 @@ export default interface IUser {
 }
 
 // Tipo para la creación de un usuario
-export type UserCreateDTO = Omit<IUser, "id" | "created_at" | "updated_at">;
+export interface UserDTO {
+  id?: number;
+  email: string;
+  password: string;
+  [key: string]: any; // Para propiedades adicionales
+}
 
 // Tipo para la respuesta de usuario (sin contraseña)
 export type UserResponse = Omit<IUser, "password">;

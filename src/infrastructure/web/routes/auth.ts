@@ -1,11 +1,6 @@
 import { Router } from "express";
-import {
-  createAccount,
-  loginAccount,
-  getUser,
-} from "../handlers";
 import { validateBodyAuth } from "../middlewares/auth/registerValidation";
-
+import { authController } from "../controllers/auth.controller";
 const router = Router();
 
 //routing
@@ -53,7 +48,7 @@ const router = Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/api/auth/register", validateBodyAuth.register, createAccount); // GET request
+router.post("/api/auth/register", validateBodyAuth.register,  authController.createAccount.bind(authController)); // GET request
 
 /**
  * @swagger
@@ -82,7 +77,7 @@ router.post("/api/auth/register", validateBodyAuth.register, createAccount); // 
  *       500:
  *         description: Error del servidor
  */
-router.post("/api/auth/login", validateBodyAuth.login, loginAccount); // GET request
+router.post("/api/auth/login", validateBodyAuth.login, authController.loginAccount.bind(authController)); // GET request
 
 /**
  * @swagger
@@ -102,6 +97,6 @@ router.post("/api/auth/login", validateBodyAuth.login, loginAccount); // GET req
  *       500:
  *         description: Error del servidor
  */
-router.get("/api/auth/getUser", validateBodyAuth.authorization, getUser); // GET request
+router.get("/api/auth/getUser", validateBodyAuth.authorization, authController.getUser.bind(authController)); // GET request
 
 export default router;
