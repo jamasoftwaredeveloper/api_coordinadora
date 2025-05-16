@@ -1,15 +1,107 @@
 import { Router } from "express";
-import { createAccount, loginAccount, getUser, updateUser, uploadImage } from "../handlers";
+import {
+  createAccount,
+  loginAccount,
+  getUser,
+} from "../handlers";
 import { validateBodyAuth } from "../middlewares/auth/registerValidation";
 
 const router = Router();
 
 //routing
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ *     description: Endpoints para autenticación de usuarios
+ */
 
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Registra un nuevo usuario
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario creado exitosamente
+ *       409:
+ *         description: El email o el handle ya están en uso
+ *       500:
+ *         description: Error del servidor
+ */
 router.post("/api/auth/register", validateBodyAuth.register, createAccount); // GET request
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Inicia sesión en la aplicación
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Autenticación exitosa
+ *       401:
+ *         description: Credenciales incorrectas
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
 router.post("/api/auth/login", validateBodyAuth.login, loginAccount); // GET request
+
+/**
+ * @swagger
+ * /api/auth/getUser:
+ *   get:
+ *     summary: Obtiene los datos del usuario autenticado
+ *     security:
+ *       - BearerAuth: []
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Información del usuario
+ *       404:
+ *         description: Usuario no encontrado
+ *       409:
+ *         description: El usuario no existe
+ *       500:
+ *         description: Error del servidor
+ */
 router.get("/api/auth/getUser", validateBodyAuth.authorization, getUser); // GET request
-router.patch("/api/auth/updateUser", validateBodyAuth.updateUser, updateUser); 
-router.post("/api/auth/uploadImageUser/image", validateBodyAuth.authorization, uploadImage); 
 
 export default router;

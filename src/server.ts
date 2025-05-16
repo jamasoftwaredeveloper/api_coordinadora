@@ -3,12 +3,15 @@ import express from "express"; //ESM EcmaScript module system
 import cors from "cors";
 import "dotenv/config";
 import router from "./routes/auth";
-
+import { swaggerDocs } from "./swagger";
 import { corsConfig } from "./config/cors";
 import User from "./models/User";
 
 const app = express();
 //Cors
+//Swagger
+const port = parseInt(process.env.PORT || "4000", 10);
+swaggerDocs(app, port);
 app.use(cors(corsConfig));
 (async () => {
     try {
@@ -18,11 +21,11 @@ app.use(cors(corsConfig));
       console.error('Error al inicializar tabla de usuarios:', error);
     }
   })();
-//Conexión a base datos
 
 // routes
 //Leer datos de json
 app.use(express.json());
 app.use("/", router);
+
 
 export default app;
