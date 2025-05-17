@@ -15,6 +15,7 @@ class UserModel {
     }
     // Crear la tabla de usuarios si no existe
     public async createTable(): Promise<ResultSetHeader> {
+
       const sql = `
         CREATE TABLE IF NOT EXISTS users (
           id INT AUTO_INCREMENT PRIMARY KEY,

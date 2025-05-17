@@ -6,6 +6,8 @@ const whiteList = [process.env.FRONTEND_URL];
 if (process.env.NODE_ENV === "development" || process.argv.includes("--api")) {
   whiteList.push("http://localhost:4000"); // Permitir solicitudes desde el mismo servidor
   whiteList.push("http://localhost:5173"); 
+  whiteList.push("http://localhost:80"); 
+  whiteList.push("http://localhost"); 
   whiteList.push(undefined); // Para herramientas como Postman
 }
 

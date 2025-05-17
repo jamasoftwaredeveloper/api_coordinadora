@@ -12,7 +12,7 @@ export class DatabaseConfig {
     this.pool = createPool({
       host: process.env.MYSQL_HOST || 'localhost',
       user: process.env.MYSQL_USER || 'root',
-      password: process.env.MYSQL_PASSWORD || '',
+      password: process.env.MYSQL_PASSWORD || '1993',
       database: process.env.MYSQL_DB || 'coordinadora_db',
       waitForConnections: true,
       connectionLimit: 10,

@@ -1,0 +1,80 @@
+version: '1'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-1
+    volumes:
+      - .:/app:delegated
+      # Excluimos node_modules para que use los del contenedor
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    command: >
+      bash -c "npm rebuild bcrypt --build-from-source && npm run dev"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=development
+      # Variables de conexión a la base de datos para desarrollo local
+      - MYSQL_HOST=mysql-container
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=1993
+      - MYSQL_DB=db_coordinadora
+      # Aseguramos que bcrypt pueda compilarse correctamente
+      - BCRYPT_FORCE_REBUILD=1
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    networks:
+      - app-network
+    environment:
+      MYSQL_DATABASE: db_coordinadora
+      MYSQL_ROOT_PASSWORD: 1993
+      # Configuración para desarrollo local - permitir conexiones sin restricciones
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      # Puerto mapeado para acceso local
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode=''
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1993"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container
+    restart: always
+    networks:
+      - app-network
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql-container
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: 1993
+      # Configuración simplificada para desarrollo local
+      PMA_USER: root
+      PMA_PASSWORD: 1993
+    depends_on:
+      - mysql
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    name: coordinadora_mysql_data

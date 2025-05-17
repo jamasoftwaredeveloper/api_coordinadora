@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "description": "api de devtree",
+  "description": "api de coordinadora",
   "main": " src/index.ts",
   "scripts": {
     "dev": "nodemon src/index.ts",
