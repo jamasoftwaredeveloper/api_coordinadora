@@ -9,6 +9,7 @@ export class Shipment implements ShipmentEntity {
   id?: number;
   userId: number;
   packageInfo: PackageInfo;
+  exitAddress: Address;
   destinationAddress: Address;
   status: ShipmentStatus;
   trackingNumber?: string;
@@ -20,6 +21,7 @@ export class Shipment implements ShipmentEntity {
     this.id = data.id;
     this.userId = data.userId;
     this.packageInfo = data.packageInfo;
+    this.exitAddress = data.exitAddress;
     this.destinationAddress = data.destinationAddress;
     this.status = data.status || ShipmentStatus.PENDING;
     this.trackingNumber = data.trackingNumber;

@@ -30,6 +30,7 @@ export interface ShipmentEntity {
   id?: number;
   userId: number;
   packageInfo: PackageInfo;
+  exitAddress: Address;
   destinationAddress: Address;
   status: ShipmentStatus;
   trackingNumber?: string;

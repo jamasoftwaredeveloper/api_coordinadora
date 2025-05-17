@@ -130,6 +130,13 @@ router.post(
  *     tags: [Ordenes de envio]
  *     security:
  *       - BearerAuth: []
+  *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Número de tracking para buscar envíos
  *     responses:
  *       200:
  *         description: Envíos obtenidos con éxito
@@ -139,7 +146,7 @@ router.post(
  *         description: Error interno del servidor
  */
 router.get(
-  "/api/shipment/userShipments",
+  "/api/shipment/userShipments/:search?",
   validateBodyAuth.authorization,
   shipmentController.getUserShipments.bind(shipmentController)
 );
@@ -247,10 +254,6 @@ router.put(
   validateBodyAuth.authorization,
   shipmentController.assignRouteToShipment.bind(shipmentController)
 );
-
-
-
-
 
 /**
  * @swagger

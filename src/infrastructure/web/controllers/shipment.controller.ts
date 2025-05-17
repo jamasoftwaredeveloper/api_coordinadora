@@ -56,7 +56,10 @@ export class ShipmentController {
         return;
       }
 
-      const result = await this.shipmentService.getShipmentsByUserId(userId);
+      const search = req.params.search;
+
+      //console.log("search:", req);
+      const result = await this.shipmentService.getShipmentsByUserId(userId, search);
 
       if (result.isError) {
         res.status(result.statusCode || 400).json({

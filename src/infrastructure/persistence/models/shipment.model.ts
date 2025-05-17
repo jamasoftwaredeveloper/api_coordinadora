@@ -9,10 +9,7 @@ import { ShipmentStatus } from "../../../interfaces/order/shipment.interface";
 // Interfaces para tipar los resultados
 interface ShipmentRow
   extends RowDataPacket,
-    Omit<ShipmentDTO, "packageInfo" | "destinationAddress"> {
-  package_info: string; // JSON string
-  destination_address: string; // JSON string
-}
+    Omit<ShipmentDTO, "createdAt" | "updatedAt"> {}
 
 export class ShipmentModel {
   private pool: Pool;
@@ -103,9 +100,9 @@ export class ShipmentModel {
       return {
         id: shipment.id,
         userId: shipment.user_id,
-        packageInfo:this.safeParse(shipment.package_info),
-        destinationAddress:this.safeParse(shipment.destination_address),
-        exitAddress:this.safeParse(shipment.exit_address),
+        packageInfo: this.safeParse(shipment.package_info),
+        destinationAddress: this.safeParse(shipment.destination_address),
+        exitAddress: this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
         trackingNumber: shipment.tracking_number,
         estimatedDeliveryDate: shipment.estimated_delivery_date,
@@ -155,17 +152,39 @@ export class ShipmentModel {
   }
 
   // Encontrar envíos por ID de usuario
-  public async findByUserId(userId: number): Promise<ShipmentDTO[]> {
-    console.log(`Finding shipments for user ID: ${userId}`);
+  public async findByUserId(
+    userId: number,
+    search: string = ShipmentStatus.PENDING
+  ): Promise<
+    Omit<ShipmentDTO[] | null, "createdAt" | "updatedAt"> &
+      {
+        route: string;
+        transporter: string;
+      }[]
+  > {
 
-    const sql = `SELECT * FROM shipments WHERE user_id = ?`;
+    let sql = `SELECT s.*, t.name as transporter, r.name as route FROM shipments s LEFT JOIN routes r ON s.route_id = r.id
+    LEFT JOIN transporters t ON s.transporter_id = t.id WHERE user_id = ?`;
+    if (search) {
+      sql = `SELECT s.*,t.name as transporter, r.name as route FROM shipments s LEFT JOIN routes r ON s.route_id = r.id
+      LEFT JOIN transporters t ON s.transporter_id = t.id WHERE user_id = ?  AND (
+        status = ?
+        OR tracking_number = ?
+      );`;
+    }
 
     try {
-      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [userId]);
+      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [
+        userId,
+        search,
+        search,
+      ]);
 
       return rows.map((shipment) => ({
         id: shipment.id,
         userId: shipment.user_id,
+        route: shipment.route,
+        transporter: shipment.transporter,
         packageInfo: this.safeParse(shipment.package_info),
         destinationAddress: this.safeParse(shipment.destination_address),
         exitAddress: this.safeParse(shipment.exit_address),

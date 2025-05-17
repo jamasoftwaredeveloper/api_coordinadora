@@ -107,19 +107,25 @@ export class ShipmentService {
 
   // Otros métodos del servicio...
   async getShipmentsByUserId(
-    userId: number
+    userId: number,
+    search: string
   ): Promise<Result<ShipmentResponseDTO[]>> {
     try {
-      const shipments = await this.shipmentRepository.findByUserId(userId);
+      const shipments = await this.shipmentRepository.findByUserId(userId,search);
 
       const shipmentResponses = shipments.map((shipment) => {
         const entity = new Shipment(shipment);
         return {
           id: shipment.id!,
           trackingNumber: shipment.trackingNumber!,
+          route:shipment.route,
+          transporter: shipment.transporter,
           status: shipment.status,
           estimatedDeliveryDate: shipment.estimatedDeliveryDate,
           cost: entity.calculateShippingCost(),
+          destinationAddress: shipment.destinationAddress,
+          exitAddress: shipment.exitAddress,
+          packageInfo: shipment.packageInfo,
           message: "",
         };
       });

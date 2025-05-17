@@ -32,8 +32,8 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
     return await this.shipmentModel.findByTrackingNumber(trackingNumber);
   }
 
-  async findByUserId(userId: number): Promise<ShipmentDTO[]> {
-    return await this.shipmentModel.findByUserId(userId);
+  async findByUserId(userId: number,search:string): Promise<ShipmentDTO[]> {
+    return await this.shipmentModel.findByUserId(userId,search);
   }
 
   async updateStatus(id: number, status: ShipmentStatus): Promise<boolean> {

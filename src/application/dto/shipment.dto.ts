@@ -11,6 +11,8 @@ export interface ShipmentDTO {
   userId: number;
   routeId?: number;
   transporterId?: number;
+  route?:string;
+  transporter?:string;
   packageInfo: PackageInfo;
   exitAddress: Address;
   destinationAddress: Address;
@@ -29,6 +31,8 @@ export interface CreateShipmentDTO
 export interface ShipmentResponseDTO
   extends Pick<ShipmentDTO, "id" | "status" | "estimatedDeliveryDate"> {
   cost: number;
+  route?:string;
+  transporter?: string;
   message: string;
 }
 
