@@ -154,7 +154,7 @@ export class ShipmentModel {
   // Encontrar envíos por ID de usuario
   public async findByUserId(
     userId: number,
-    search: string = ShipmentStatus.PENDING
+    parameters: object
   ): Promise<
     Omit<ShipmentDTO[] | null, "createdAt" | "updatedAt"> &
       {
@@ -162,24 +162,36 @@ export class ShipmentModel {
         transporter: string;
       }[]
   > {
-
-    let sql = `SELECT s.*, t.name as transporter, r.name as route FROM shipments s LEFT JOIN routes r ON s.route_id = r.id
-    LEFT JOIN transporters t ON s.transporter_id = t.id WHERE user_id = ?`;
-    if (search) {
-      sql = `SELECT s.*,t.name as transporter, r.name as route FROM shipments s LEFT JOIN routes r ON s.route_id = r.id
-      LEFT JOIN transporters t ON s.transporter_id = t.id WHERE user_id = ?  AND (
-        status = ?
-        OR tracking_number = ?
-      );`;
+    const { search = ShipmentStatus.PENDING, route_id, transporter_id } = parameters as {
+      search?: string;
+      route_id?: number;
+      transporter_id?: number;
+    };
+  
+    let sql = `SELECT s.*, t.name as transporter, r.name as route FROM shipments s
+      LEFT JOIN routes r ON s.route_id = r.id
+      LEFT JOIN transporters t ON s.transporter_id = t.id
+      WHERE user_id = ? AND (status = ? OR tracking_number = ?)`;
+  
+    const conditions: string[] = [];
+    const values: any[] = [userId, search, search];
+  
+    if (route_id) {
+      conditions.push('s.route_id = ?');
+      values.push(route_id);
     }
-
+  
+    if (transporter_id) {
+      conditions.push('s.transporter_id = ?');
+      values.push(transporter_id);
+    }
+  
+    if (conditions.length) {
+      sql += ' AND ' + conditions.join(' AND ');
+    }
+  
     try {
-      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [
-        userId,
-        search,
-        search,
-      ]);
-
+      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, values);
       return rows.map((shipment) => ({
         id: shipment.id,
         userId: shipment.user_id,

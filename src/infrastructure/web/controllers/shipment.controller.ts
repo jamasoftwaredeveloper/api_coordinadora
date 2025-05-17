@@ -56,10 +56,9 @@ export class ShipmentController {
         return;
       }
 
-      const search = req.params.search;
-
-      //console.log("search:", req);
-      const result = await this.shipmentService.getShipmentsByUserId(userId, search);
+      const parameters = req.query;
+  
+      const result = await this.shipmentService.getShipmentsByUserId(userId, parameters);
 
       if (result.isError) {
         res.status(result.statusCode || 400).json({
@@ -188,7 +187,7 @@ export class ShipmentController {
 
       res.status(200).json({
         message: "Transportes disponible disponibles éxito",
-        shipments: result,
+        transporters: result,
       });
     } catch (error) {
       console.error("Error en getUserShipments:", error);

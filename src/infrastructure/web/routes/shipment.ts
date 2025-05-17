@@ -124,19 +124,45 @@ router.post(
 
 /**
  * @swagger
- * /api/shipment/userShipments:
+ * /api/shipment/userShipments/{search}/{routeId}/{transporterId}/{dateStart}/{dateEnd}:
  *   get:
- *     summary: Obtiene los envios de un usuario
- *     tags: [Ordenes de envio]
+ *     summary: Obtiene los envíos de un usuario
+ *     tags: [Órdenes de envío]
  *     security:
  *       - BearerAuth: []
-  *     parameters:
- *       - in: query
+ *     parameters:
+ *       - in: path
  *         name: search
  *         schema:
  *           type: string
  *         required: false
  *         description: Número de tracking para buscar envíos
+ *       - in: path
+ *         name: routeId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: ID de la ruta del envío
+ *       - in: path
+ *         name: transporterId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: ID del transportista
+ *       - in: path
+ *         name: dateStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de inicio del envío
+ *       - in: path
+ *         name: dateEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de finalización del envío
  *     responses:
  *       200:
  *         description: Envíos obtenidos con éxito
@@ -146,7 +172,7 @@ router.post(
  *         description: Error interno del servidor
  */
 router.get(
-  "/api/shipment/userShipments/:search?",
+  "/api/shipment/userShipments",
   validateBodyAuth.authorization,
   shipmentController.getUserShipments.bind(shipmentController)
 );
@@ -248,7 +274,7 @@ router.put(
  *         description: Error al asignar la ruta
  *       401:
  *         description: Usuario no autenticado
- */ 
+ */
 router.put(
   "/api/shipment/assignRoute",
   validateBodyAuth.authorization,
@@ -298,8 +324,5 @@ router.get(
   validateBodyAuth.authorization,
   shipmentController.allTransporters.bind(shipmentController)
 );
-
-
-
 
 export default router;

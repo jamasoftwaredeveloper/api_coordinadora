@@ -108,10 +108,11 @@ export class ShipmentService {
   // Otros métodos del servicio...
   async getShipmentsByUserId(
     userId: number,
-    search: string
+    parameters?: object
   ): Promise<Result<ShipmentResponseDTO[]>> {
     try {
-      const shipments = await this.shipmentRepository.findByUserId(userId,search);
+      
+      const shipments = await this.shipmentRepository.findByUserId(userId,parameters);
 
       const shipmentResponses = shipments.map((shipment) => {
         const entity = new Shipment(shipment);

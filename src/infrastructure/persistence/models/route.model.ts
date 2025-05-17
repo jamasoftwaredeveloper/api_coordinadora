@@ -144,13 +144,13 @@ export class RouteModel {
 
   // Todas las rutas disponibles
   public async allRoutes(): Promise<RouteRow[]> {
-    const sql = `SELECT * FROM routes`;
+    const sql = `SELECT name as label, id as value FROM routes`;
     const [rows] = await this.pool.execute<RouteRow[]>(sql);
     return rows;
   }
 
   public async allTransporters(): Promise<TransporterRow[]> {
-    const sql = `SELECT * FROM transporters`;
+    const sql = `SELECT name as label, id as value FROM transporters`;
     const [rows] = await this.pool.execute<TransporterRow[]>(sql);
     return rows;
   }

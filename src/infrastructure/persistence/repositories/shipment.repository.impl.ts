@@ -32,7 +32,7 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
     return await this.shipmentModel.findByTrackingNumber(trackingNumber);
   }
 
-  async findByUserId(userId: number,search:string): Promise<ShipmentDTO[]> {
+  async findByUserId(userId: number,search:object): Promise<ShipmentDTO[]> {
     return await this.shipmentModel.findByUserId(userId,search);
   }
 
