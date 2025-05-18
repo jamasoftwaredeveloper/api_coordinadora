@@ -28,15 +28,11 @@ class UserModel {
 
     try {
       await this.pool.execute<ResultSetHeader>(sql);
-      console.log("Tabla 'users' verificada o creada correctamente.");
 
       // Verificar si la tabla está vacía
       const isEmpty = await this.isTableEmpty();
       if (isEmpty) {
         await this.insertDefaultUsers();
-        console.log("Usuario predeterminados insertados.");
-      } else {
-        console.log("La tabla ya contiene usuarios.");
       }
     } catch (error) {
       throw new DatabaseError("Error creating users table", error);

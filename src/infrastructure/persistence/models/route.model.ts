@@ -43,15 +43,10 @@ export class RouteModel {
     try {
       // Crear la tabla si no existe
       await this.pool.execute<ResultSetHeader>(sql);
-      console.log("Tabla 'routes' verificada o creada correctamente.");
-
       // Verificar si la tabla está vacía
       const isEmpty = await this.isTableEmpty();
       if (isEmpty) {
         await this.insertDefaultRoutes();
-        console.log("Rutas predeterminadas insertadas.");
-      } else {
-        console.log("La tabla ya contiene rutas.");
       }
     } catch (error) {
       throw new DatabaseError(

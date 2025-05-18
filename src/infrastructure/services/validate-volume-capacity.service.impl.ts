@@ -15,8 +15,6 @@ export class ValidateWeightCapacityServiceImpl
       ) {
         return false;
       }
-
-      console.log("Correo enviado correctamente");
       return true;
     } catch (error) {
       console.error("Error al enviar el correo:", error.message);

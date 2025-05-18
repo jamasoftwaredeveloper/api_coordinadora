@@ -14,7 +14,7 @@ export const validateShipmentMiddleware = (
   if (!packageInfo) {
     res
       .status(400)
-      .json({ message: "La información del paquete es requerida" });
+      .json({ message: "Error al registrar el envío" });
     return;
   }
 

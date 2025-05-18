@@ -181,7 +181,6 @@ export class ShipmentModel {
 
     const conditions: string[] = [];
     const values: any[] = [userId];
-    console.log("parameters", parameters);
 
     // Filtro por estado o número de rastreo
     if (search) {
@@ -190,34 +189,28 @@ export class ShipmentModel {
     }
 
     if (status) {
-      console.log("trackingNumber", status);
       conditions.push("s.status = ?");
       values.push(status);
     }
 
     if (route_id) {
-      console.log("route_id", route_id);
       conditions.push("s.route_id = ?");
       values.push(route_id);
     }
 
     if (transporter_id) {
-      console.log("transporter_id", transporter_id);
       conditions.push("s.transporter_id = ?");
       values.push(transporter_id);
     }
 
     // Filtro por rango de fechas
     if (startDate && endDate) {
-      console.log("data", 1);
       conditions.push("s.estimated_delivery_date BETWEEN ? AND ?");
       values.push(startDate, endDate);
     } else if (startDate) {
-      console.log("data", 2);
       conditions.push("s.estimated_delivery_date >= ?");
       values.push(startDate);
     } else if (endDate) {
-      console.log("data", 3);
       conditions.push("s.estimated_delivery_date <= ?");
       values.push(endDate);
     }
@@ -270,7 +263,6 @@ export class ShipmentModel {
         status,
         id,
       ]);
-      console.log("shipment", result.affectedRows);
       if (result.affectedRows > 0) {
         const shipment = await this.findById(id);
 

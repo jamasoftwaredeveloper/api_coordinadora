@@ -27,22 +27,18 @@ export class NotificationServiceImpl implements NotificationService {
       const result = await new Promise<boolean>((resolve, reject) => {
         exec(curlCommand, (error, stdout, stderr) => {
           if (error) {
-            console.error(`Error ejecutando curl: ${error.message}`);
             reject(false);
             return;
           }
 
           if (stderr) {
-            console.error(`Error en cURL: ${stderr}`);
             reject(false);
             return;
           }
 
-          console.log(`Respuesta de cURL: ${stdout}`);
           resolve(true);
         });
       });
-      console.log("result",result);
       
       return true;
     } catch (error) {}

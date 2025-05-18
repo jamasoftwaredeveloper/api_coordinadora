@@ -40,7 +40,7 @@ export class ShipmentController {
       }
 
       res.status(201).json({
-        message: "Orden de envío creada con éxito",
+        message: "Envío registrado correctamente",
         shipment: result.data,
       });
     } catch (error) {

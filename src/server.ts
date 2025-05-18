@@ -42,19 +42,11 @@ app.use(express.json());
 // Inicialización de tablas en la base de datos
 (async () => {
   try {
-    console.log("Tabla de usuarios inicializada");
     await userModel.createTable();
-
-    console.log("Tabla de rutas inicializada");
     await routeModel.createTable();
-
-    console.log("Tabla de transporte inicializada");
     await transporterModel.createTable();
-
-    console.log("Tabla de envíos inicializada");
     await shipmentModel.createTable();
   } catch (error) {
-    console.error("Error al inicializar tablas:", error);
   }
 })();
 

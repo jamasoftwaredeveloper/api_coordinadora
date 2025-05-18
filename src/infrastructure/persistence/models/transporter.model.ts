@@ -27,15 +27,11 @@ export class TransporterModel {
     try {
       // Crear la tabla si no existe
       await this.pool.execute<ResultSetHeader>(sql);
-      console.log("Tabla 'transporters' verificada o creada correctamente.");
 
       // Verificar si la tabla está vacía
       const isEmpty = await this.isTableEmpty();
       if (isEmpty) {
         await this.insertDefaultTransporters();
-        console.log("Transportistas predeterminados insertados.");
-      } else {
-        console.log("La tabla ya contiene transportistas.");
       }
     } catch (error) {
       throw new DatabaseError("Error al crear o verificar la tabla de transportistas", error);
