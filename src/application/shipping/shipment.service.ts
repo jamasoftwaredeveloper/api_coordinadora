@@ -15,6 +15,8 @@ import { RouteRepository } from "../../interfaces/repositories/route.repository.
 import { RouteDTO } from "../dto/route.dto";
 import { TransporterDTO } from "../dto/transporter.dto";
 import { ValidateWeightCapacityService } from "../../interfaces/services/validateWeightCapacity.service.interface";
+import { emitUpdate } from "../../infrastructure/websocket/socket";
+import { Server as SocketIOServer } from "socket.io";
 
 export class ShipmentService {
   constructor(
@@ -23,7 +25,8 @@ export class ShipmentService {
     private notificationService: NotificationService,
     private addressValidationService: AddressValidationService,
     private routeRepository: RouteRepository,
-    private validateWeightCapacityService: ValidateWeightCapacityService
+    private validateWeightCapacityService: ValidateWeightCapacityService,
+    private io: SocketIOServer
   ) {}
 
   async createShipment(
@@ -88,7 +91,7 @@ export class ShipmentService {
         subject: "Orden de envío creada con éxito",
         content: `Tu orden de envío ha sido creada con éxito. Número de seguimiento: ${trackingNumber}`,
       });
-
+      emitUpdate(this.io, { message:"Nuevo dato"});
       // Devolver respuesta
       return Result.ok({
         id: createdShipment.id!,
@@ -163,10 +166,12 @@ export class ShipmentService {
     status: ShipmentStatus
   ): Promise<Result<boolean>> {
     try {
+
       const shipment = await this.shipmentRepository.updateStatus(id, status);
       if (!shipment) {
         return Result.fail("No se pudo actualizar el estado del envío", 404);
       }
+      emitUpdate(this.io, { message:"Actualizado dato"});
       return Result.ok(shipment);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
@@ -235,6 +240,7 @@ export class ShipmentService {
       }
 
       await this.shipmentRepository.updateStatus(id, ShipmentStatus.PROCESSING);
+      emitUpdate(this.io, { message:"Orden asignada"});
       return Result.ok(result);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);

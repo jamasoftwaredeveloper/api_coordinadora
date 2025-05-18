@@ -115,6 +115,7 @@ export class ShipmentController {
   async updateStatus(req: Request, res: Response): Promise<boolean> {
     try {
       const { id, status }: ShipmentUpdateStatusRequest = req.body;
+      
       const result = await this.shipmentService.updateStatus(id, status);
       if (result.isError) {
         res.status(result.statusCode || 400).json({

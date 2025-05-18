@@ -8,7 +8,7 @@ import { AddressValidationServiceImpl } from "./services/address-validation.serv
 import { ShipmentService } from "../application/shipping/shipment.service";
 import { RouteRepositoryImpl } from "./persistence/repositories/route.repository.impl";
 import { ValidateWeightCapacityServiceImpl } from "./services/validate-volume-capacity.service.impl";
-
+import { Server as SocketIOServer } from "socket.io";
 
 class Container {
   private services: Map<string, any> = new Map();
@@ -40,7 +40,8 @@ class Container {
       notificationService,
       addressValidationService,
       routeRepository,
-      validateWeightCapacityService
+      validateWeightCapacityService,
+      new SocketIOServer
     );
 
     // Registrar servicios

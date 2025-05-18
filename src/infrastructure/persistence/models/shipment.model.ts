@@ -84,7 +84,7 @@ export class ShipmentModel {
         trackingNumber,
         estimatedDeliveryDate,
       ]);
-
+    
       return {
         ...shipmentData,
         id: result.insertId,
