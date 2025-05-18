@@ -16,7 +16,6 @@ import { RouteDTO } from "../dto/route.dto";
 import { TransporterDTO } from "../dto/transporter.dto";
 import { ValidateWeightCapacityService } from "../../interfaces/services/validateWeightCapacity.service.interface";
 
-
 export class ShipmentService {
   constructor(
     private shipmentRepository: ShipmentRepository,
@@ -111,15 +110,17 @@ export class ShipmentService {
     parameters?: object
   ): Promise<Result<ShipmentResponseDTO[]>> {
     try {
-      
-      const shipments = await this.shipmentRepository.findByUserId(userId,parameters);
+      const shipments = await this.shipmentRepository.findByUserId(
+        userId,
+        parameters
+      );
 
       const shipmentResponses = shipments.map((shipment) => {
         const entity = new Shipment(shipment);
         return {
           id: shipment.id!,
           trackingNumber: shipment.trackingNumber!,
-          route:shipment.route,
+          route: shipment.route,
           transporter: shipment.transporter,
           status: shipment.status,
           estimatedDeliveryDate: shipment.estimatedDeliveryDate,
@@ -196,7 +197,6 @@ export class ShipmentService {
     try {
       const shipment = await this.shipmentRepository.findById(id);
 
-      console.log("shipment", shipment.packageInfo);
       if (!shipment) {
         return Result.fail("No se encontró el envío", 404);
       }
@@ -205,7 +205,7 @@ export class ShipmentService {
       );
 
       if (!transporter) {
-        return Result.fail("No se encontró el transportista", 404);
+        return Result.fail("El transportista ya fue asignado", 404);
       }
 
       const packageAllowed =
@@ -233,6 +233,8 @@ export class ShipmentService {
       if (!result) {
         return Result.fail("No se pudo asignar la ruta al envío", 400);
       }
+
+      await this.shipmentRepository.updateStatus(id, ShipmentStatus.PROCESSING);
       return Result.ok(result);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);

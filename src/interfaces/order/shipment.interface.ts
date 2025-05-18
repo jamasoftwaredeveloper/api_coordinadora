@@ -51,4 +51,5 @@ export interface Filter {
   transporter_id?: number;
   startDate?:string;
   endDate?:string;
+  status?:string
 }

@@ -139,6 +139,10 @@ export class RouteModel {
       sqlTransporters,
       [0, transporterId]
     );
+
+
+
+    
     return result.affectedRows > 0 && resultTransporter.affectedRows > 0;
   }
 

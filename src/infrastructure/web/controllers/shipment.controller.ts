@@ -57,8 +57,11 @@ export class ShipmentController {
       }
 
       const parameters = req.query;
-  
-      const result = await this.shipmentService.getShipmentsByUserId(userId, parameters);
+
+      const result = await this.shipmentService.getShipmentsByUserId(
+        userId,
+        parameters
+      );
 
       if (result.isError) {
         res.status(result.statusCode || 400).json({
@@ -132,11 +135,12 @@ export class ShipmentController {
 
   async assignRouteToShipment(req: Request, res: Response): Promise<void> {
     try {
-      const { id, routeId, transporterId } = req.body;
+      const { id, route_id, transporter_id } = req.body;
+      
       const result = await this.shipmentService.assignRouteToShipment({
         id,
-        routeId,
-        transporterId,
+        routeId: route_id,
+        transporterId: transporter_id,
       });
 
       if (result.isError) {

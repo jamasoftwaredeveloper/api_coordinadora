@@ -43,10 +43,10 @@ export class ShipmentModel {
         INDEX idx_status (status),
         INDEX idx_transporter_id (transporter_id),
         INDEX idx_route_id (route_id),
-        INDEX idx_destination_address ((destination_address->>'$.address'))
+        INDEX idx_destination_address ((CAST(destination_address->>'$.address' AS CHAR(100))))
       )
     `;
-
+  
     try {
       const [result] = await this.pool.execute<ResultSetHeader>(sql);
       return result;
@@ -54,6 +54,7 @@ export class ShipmentModel {
       throw new DatabaseError("Error creating shipments table", error);
     }
   }
+  
 
   // Crear un nuevo envío
   public async create(shipmentData: ShipmentDTO): Promise<ShipmentDTO> {
@@ -108,6 +109,7 @@ export class ShipmentModel {
         id: shipment.id,
         userId: shipment.user_id,
         packageInfo: this.safeParse(shipment.package_info),
+        transporterId: shipment.transporter_id,
         destinationAddress: this.safeParse(shipment.destination_address),
         exitAddress: this.safeParse(shipment.exit_address),
         status: shipment.status as ShipmentStatus,
@@ -169,43 +171,53 @@ export class ShipmentModel {
         transporter: string;
       }[]
   > {
-    const {
-      search = ShipmentStatus.PENDING,
-      route_id,
-      transporter_id,
-      startDate,
-      endDate,
-    } = parameters as Filter;
-    console.log("endDate")  
-    console.log("startDate",startDate);
-    console.log("endDate", endDate)  
-    
+    const { search, status, route_id, transporter_id, startDate, endDate } =
+      parameters as Filter;
+
     let sql = `SELECT s.*, t.name as transporter, r.name as route FROM shipments s
       LEFT JOIN routes r ON s.route_id = r.id
       LEFT JOIN transporters t ON s.transporter_id = t.id
-      WHERE user_id = ? AND (status = ? OR tracking_number = ?)`;
+      WHERE user_id = ?`;
 
     const conditions: string[] = [];
-    const values: any[] = [userId, search, search];
+    const values: any[] = [userId];
+    console.log("parameters", parameters);
+
+    // Filtro por estado o número de rastreo
+    if (search) {
+      conditions.push("s.tracking_number = ?");
+      values.push(search);
+    }
+
+    if (status) {
+      console.log("trackingNumber", status);
+      conditions.push("s.status = ?");
+      values.push(status);
+    }
 
     if (route_id) {
+      console.log("route_id", route_id);
       conditions.push("s.route_id = ?");
       values.push(route_id);
     }
 
     if (transporter_id) {
+      console.log("transporter_id", transporter_id);
       conditions.push("s.transporter_id = ?");
       values.push(transporter_id);
     }
-    
+
     // Filtro por rango de fechas
-    if (startDate && endDate) {    
+    if (startDate && endDate) {
+      console.log("data", 1);
       conditions.push("s.estimated_delivery_date BETWEEN ? AND ?");
       values.push(startDate, endDate);
     } else if (startDate) {
+      console.log("data", 2);
       conditions.push("s.estimated_delivery_date >= ?");
       values.push(startDate);
     } else if (endDate) {
+      console.log("data", 3);
       conditions.push("s.estimated_delivery_date <= ?");
       values.push(endDate);
     }
@@ -258,6 +270,18 @@ export class ShipmentModel {
         status,
         id,
       ]);
+      console.log("shipment", result.affectedRows);
+      if (result.affectedRows > 0) {
+        const shipment = await this.findById(id);
+
+        if (shipment.transporterId != null) {
+          const sqlTransporters = `UPDATE transporters SET available = ? WHERE id = ?`;
+          await this.pool.execute<ResultSetHeader>(sqlTransporters, [
+            1,
+            shipment.transporterId,
+          ]);
+        }
+      }
       return result.affectedRows > 0;
     } catch (error) {
       throw new DatabaseError("Error updating shipment status", error);
