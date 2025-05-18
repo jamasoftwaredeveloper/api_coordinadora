@@ -36,7 +36,11 @@ export class ShipmentModel {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id),
         FOREIGN KEY (route_id) REFERENCES routes(id),
-        FOREIGN KEY (transporter_id) REFERENCES transporters(id)
+        FOREIGN KEY (transporter_id) REFERENCES transporters(id),
+        INDEX idx_status (status),
+        INDEX idx_transporter_id (transporter_id),
+        INDEX idx_route_id (route_id),
+        INDEX idx_destination_address ((destination_address->>'$.address'))
       )
     `;
 

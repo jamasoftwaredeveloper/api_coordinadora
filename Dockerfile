@@ -10,12 +10,13 @@ RUN apt-get update && apt-get install -y build-essential python3 make g++
 
 # Copiamos los archivos de dependencias
 COPY package*.json ./
-
+COPY my_custom.cnf ./
 # Limpiamos node_modules si existe y la caché de npm
 RUN rm -rf node_modules && npm cache clean --force
 
 # Instalamos las dependencias, forzando la reconstrucción de bcrypt
 RUN npm install
+RUN npm install redis @types/redis
 RUN npm rebuild bcrypt --build-from-source
 
 # Copiamos el resto del código

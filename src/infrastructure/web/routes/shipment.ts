@@ -2,6 +2,7 @@ import { Router } from "express";
 import { validateBodyAuth } from "../middlewares/auth/registerValidation";
 import { shipmentController } from "../controllers/shipment.controller";
 import { validateShipmentMiddleware } from "../middlewares/shipment/validate-shipment.middleware";
+import { cache } from '../middlewares/redis/cache';
 const router = Router();
 
 /**
@@ -174,6 +175,7 @@ router.post(
 router.get(
   "/api/shipment/userShipments",
   validateBodyAuth.authorization,
+  cache(process.env.TIME_REDIS || 60),
   shipmentController.getUserShipments.bind(shipmentController)
 );
 
@@ -203,6 +205,7 @@ router.get(
 router.get(
   "/api/shipment/trackingNumber",
   validateBodyAuth.authorization,
+  cache(process.env.TIME_REDIS || 60),
   shipmentController.findByTrackingNumber.bind(shipmentController)
 );
 
@@ -300,6 +303,7 @@ router.put(
 router.get(
   "/api/shipment/allRoutes",
   validateBodyAuth.authorization,
+  cache(process.env.TIME_REDIS || 60),
   shipmentController.allRoutes.bind(shipmentController)
 );
 
@@ -322,6 +326,7 @@ router.get(
 router.get(
   "/api/shipment/allTransporters",
   validateBodyAuth.authorization,
+  cache(process.env.TIME_REDIS || 60),
   shipmentController.allTransporters.bind(shipmentController)
 );
 
