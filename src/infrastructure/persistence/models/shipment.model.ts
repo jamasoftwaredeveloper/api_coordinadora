@@ -4,7 +4,10 @@ import { Pool, RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { ShipmentDTO } from "../../../application/dto/shipment.dto";
 import { getDbPool } from "../../config/db";
 import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
-import { ShipmentStatus } from "../../../interfaces/order/shipment.interface";
+import {
+  Filter,
+  ShipmentStatus,
+} from "../../../interfaces/order/shipment.interface";
 
 // Interfaces para tipar los resultados
 interface ShipmentRow
@@ -166,34 +169,51 @@ export class ShipmentModel {
         transporter: string;
       }[]
   > {
-    const { search = ShipmentStatus.PENDING, route_id, transporter_id } = parameters as {
-      search?: string;
-      route_id?: number;
-      transporter_id?: number;
-    };
-  
+    const {
+      search = ShipmentStatus.PENDING,
+      route_id,
+      transporter_id,
+      startDate,
+      endDate,
+    } = parameters as Filter;
+    console.log("endDate")  
+    console.log("startDate",startDate);
+    console.log("endDate", endDate)  
+    
     let sql = `SELECT s.*, t.name as transporter, r.name as route FROM shipments s
       LEFT JOIN routes r ON s.route_id = r.id
       LEFT JOIN transporters t ON s.transporter_id = t.id
       WHERE user_id = ? AND (status = ? OR tracking_number = ?)`;
-  
+
     const conditions: string[] = [];
     const values: any[] = [userId, search, search];
-  
+
     if (route_id) {
-      conditions.push('s.route_id = ?');
+      conditions.push("s.route_id = ?");
       values.push(route_id);
     }
-  
+
     if (transporter_id) {
-      conditions.push('s.transporter_id = ?');
+      conditions.push("s.transporter_id = ?");
       values.push(transporter_id);
     }
-  
-    if (conditions.length) {
-      sql += ' AND ' + conditions.join(' AND ');
+    
+    // Filtro por rango de fechas
+    if (startDate && endDate) {    
+      conditions.push("s.estimated_delivery_date BETWEEN ? AND ?");
+      values.push(startDate, endDate);
+    } else if (startDate) {
+      conditions.push("s.estimated_delivery_date >= ?");
+      values.push(startDate);
+    } else if (endDate) {
+      conditions.push("s.estimated_delivery_date <= ?");
+      values.push(endDate);
     }
-  
+
+    if (conditions.length) {
+      sql += " AND " + conditions.join(" AND ");
+    }
+
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, values);
       return rows.map((shipment) => ({

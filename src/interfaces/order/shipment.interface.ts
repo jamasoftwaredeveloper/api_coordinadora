@@ -44,3 +44,11 @@ export interface ShipmentRequest
 
 export interface ShipmentUpdateStatusRequest
   extends Pick<ShipmentEntity, "id" | "status"> {}
+
+export interface Filter {
+  search: string;
+  route_id?: number;
+  transporter_id?: number;
+  startDate?:string;
+  endDate?:string;
+}
