@@ -1,6 +1,6 @@
 // src/infrastructure/web/middlewares/validate-shipment.middleware.ts
 
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { AuthRequest } from "../../../../interfaces/auth/IGetUser";
 
 export const validateShipmentMiddleware = (
