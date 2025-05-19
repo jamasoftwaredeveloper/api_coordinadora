@@ -12,14 +12,12 @@ describe("Shipment API - Integration Tests", () => {
 
   it("POST /api/shipment - Debería registrar un envío", async () => {
     const user = {
-      name: "admin@gmail.com",
+      email: "admin@gmail.com",
       password: "123456789",
     };
 
     // Autenticación para obtener el token
-    const auth = await request(server).post("/apí/auth/login").send(user);
-
-    console.log("auth", auth);
+    const auth = await request(server).post("/api/auth/login").send(user);
 
     const token = auth.body.token; // Suponiendo que el token viene en el cuerpo de la respuesta
 

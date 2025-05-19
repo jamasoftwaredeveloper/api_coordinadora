@@ -17,10 +17,8 @@ export const corsConfig: CorsOptions = {
     if (!origin || whiteList.includes(origin)) {
       callback(null, true);
     } else {
-      console.error("Origen no permitido por CORS:", origin);
       callback(new Error("Error de CORS"));
     }
-    console.log("Solicitando desde origen:", origin);
   },
   credentials: true, // Permitir el uso de cookies
 };
