@@ -20,23 +20,22 @@ async function insertDefaultUsers(pool: Pool): Promise<void> {
     (?, ?, ?, ?), 
     (?, ?, ?, ?);
 `;
-const defaultUsers = [
-  "admin",
-  "admin@gmail.com",
-  "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
-  "admin",   // primer usuario (4 valores)
-  
-  "test",
-  "test@gmail.com",
-  "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
-  "client",  // segundo usuario (4 valores)
+  const defaultUsers = [
+    "admin",
+    "admin@gmail.com",
+    "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
+    "admin", // primer usuario (4 valores)
 
-  "user3",
-  "user3@gmail.com",
-  "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
-  "client"   // tercer usuario (4 valores)
-];
+    "test",
+    "test@gmail.com",
+    "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
+    "client", // segundo usuario (4 valores)
 
+    "user3",
+    "user3@gmail.com",
+    "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
+    "client", // tercer usuario (4 valores)
+  ];
 
   try {
     await pool.execute<ResultSetHeader>(sql, defaultUsers);
