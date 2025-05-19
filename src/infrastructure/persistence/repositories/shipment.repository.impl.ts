@@ -14,6 +14,7 @@ import {
   transporterMetricsModel,
   TransporterMetricsModel,
 } from "../models/transporterMetrics.model";
+import { TransporterEntity } from "../../../interfaces/transporter/transporter.interface";
 
 export class ShipmentRepositoryImpl implements ShipmentRepository {
   private shipmentModel: ShipmentModel;
@@ -81,6 +82,17 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
     return await this.transporterMetricsModel.getMonthlyPerformanceMetrics(
       new Date(parameters.startDate),
       new Date(parameters.endDate)
+    );
+  }
+
+  async storeTransporter(
+    data: Omit<
+      TransporterEntity,
+      "id" | "created_at" | "updated_at" | "available"
+    >
+  ): Promise<Omit<TransporterEntity, "created_at" | "updated_at" | "available">> {
+    return await this.transporterMetricsModel.storeTranspoter(
+      data
     );
   }
 }

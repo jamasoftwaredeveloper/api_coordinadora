@@ -156,7 +156,13 @@ export const validateBodyAuth = {
 
     // Validación del estado
     body("status")
-      .isIn([ShipmentStatus.CANCELLED,ShipmentStatus.DELIVERED,ShipmentStatus.PENDING,ShipmentStatus.PROCESSING,ShipmentStatus.SHIPPING])
+      .isIn([
+        ShipmentStatus.CANCELLED,
+        ShipmentStatus.DELIVERED,
+        ShipmentStatus.PENDING,
+        ShipmentStatus.PROCESSING,
+        ShipmentStatus.SHIPPING,
+      ])
       .withMessage(
         "El estado debe ser uno de: Pending, In Transit, Delivered, Cancelled"
       ),
@@ -170,4 +176,52 @@ export const validateBodyAuth = {
       next();
     },
   ],
+  validateTransporter: [
+    // Validación del ID de usuario
+    body("name")
+      .isString()
+      .withMessage("El nombre debe ser una cadena de testo")
+      .notEmpty()
+      .withMessage("El nombre no debe estar vacío"),
+    // Validación de la información del paquete
+    body("vehicle_capacity")
+      .isInt({ gt: 0 })
+      .withMessage("El capacidad del vehiculo debe ser un número mayor a 0")
+      .notEmpty()
+      .withMessage("La capacidad del vehiculo  no debe estar vacío"),
+    // Manejo de errores
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      next();
+    },
+  ],
+  updateShipmentStatus: [
+    body("id")
+      .isInt({ gt: 0 })
+      .withMessage("El ID del envío debe ser un número entero positivo")
+      .notEmpty()
+      .withMessage("El ID del envío no debe estar vacío"),
+    body("status")
+      .isIn([
+        ShipmentStatus.CANCELLED,
+        ShipmentStatus.DELIVERED,
+        ShipmentStatus.PENDING,
+        ShipmentStatus.PROCESSING,
+        ShipmentStatus.SHIPPING,
+      ])
+      .withMessage(
+        "El estado debe ser uno de: Pending, Processing, Shipping, Delivered, Cancelled"
+      ),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      next();
+    },
+  ],
+  
 };

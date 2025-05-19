@@ -1,6 +1,7 @@
-import { Pool, RowDataPacket } from "mysql2/promise";
+import { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { getDbPool } from "../../config/db";
 import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
+import { TransporterEntity } from "../../../interfaces/transporter/transporter.interface";
 
 /**
  * Interfaz para métricas de transportistas
@@ -56,7 +57,6 @@ export class TransporterMetricsModel {
   constructor(pool?: Pool) {
     this.pool = pool || getDbPool();
   }
-
 
   /**
    * Obtiene métricas de rendimiento de transportistas para un período específico
@@ -207,6 +207,40 @@ export class TransporterMetricsModel {
         "Error getting monthly performance metrics",
         error
       );
+    }
+  }
+
+  // Crear un nuevo usuario
+  public async storeTranspoter(
+    data: Omit<
+      TransporterEntity,
+      "id" | "created_at" | "updated_at" | "available"
+    >
+  ): Promise<
+    Omit<TransporterEntity, "created_at" | "updated_at" | "available">
+  > {
+    const { name, vehicle_capacity } = data;
+    let sql;
+    {
+      sql = `
+          INSERT INTO transporters (name, vehicle_capacity)
+          VALUES (?, ?)
+        `;
+
+      try {
+        const [result] = await this.pool.execute<ResultSetHeader>(sql, [
+          name,
+          vehicle_capacity,
+        ]);
+
+        return {
+          id: result.insertId,
+          name,
+          vehicle_capacity,
+        };
+      } catch (error) {
+        throw new DatabaseError("Error creating user", error);
+      }
     }
   }
 }

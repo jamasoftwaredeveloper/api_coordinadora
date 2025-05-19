@@ -256,6 +256,7 @@ router.get(
 router.put(
   "/api/shipment/updateStatus",
   validateBodyAuth.authorization,
+  validateBodyAuth.updateShipmentStatus,
   shipmentController.updateStatus.bind(shipmentController)
 );
 /**
@@ -315,7 +316,6 @@ router.put(
 router.get(
   "/api/shipment/allRoutes",
   validateBodyAuth.authorization,
-  cache(process.env.TIME_REDIS || 60),
   shipmentController.allRoutes.bind(shipmentController)
 );
 
@@ -338,7 +338,6 @@ router.get(
 router.get(
   "/api/shipment/allTransporters",
   validateBodyAuth.authorization,
-  cache(process.env.TIME_REDIS || 60),
   shipmentController.allTransporters.bind(shipmentController)
 );
 
@@ -351,14 +350,14 @@ router.get(
  *     security:
  *       - BearerAuth: []
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: dateStart
  *         schema:
  *           type: string
  *           format: date
  *         required: false
  *         description: Fecha de inicio del envío
- *       - in: path
+ *       - in: query
  *         name: dateEnd
  *         schema:
  *           type: string
@@ -388,14 +387,14 @@ router.get(
  *     security:
  *       - BearerAuth: []
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: dateStart
  *         schema:
  *           type: string
  *           format: date
  *         required: false
  *         description: Fecha de inicio del envío
- *       - in: path
+ *       - in: query
  *         name: dateEnd
  *         schema:
  *           type: string
@@ -425,14 +424,14 @@ router.get(
  *     security:
  *       - BearerAuth: []
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: dateStart
  *         schema:
  *           type: string
  *           format: date
  *         required: false
  *         description: Fecha de inicio del envío
- *       - in: path
+ *       - in: query
  *         name: dateEnd
  *         schema:
  *           type: string
@@ -452,4 +451,44 @@ router.get(
   validateBodyAuth.authorization,
   shipmentController.getTransporterPerformanceMetrics.bind(shipmentController)
 );
+
+/**
+ * @swagger
+ * /api/shipment/updateStatus:
+ *   put:
+ *     summary: Actualiza el estado de un envío
+ *     tags: [Ordenes de envio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nombre
+ *               vehicle_capacity:
+ *                 type: number
+ *                 description: Capacidad
+ *     responses:
+ *       200:
+ *         description: Estado actualizado con éxito
+ *       400:
+ *         description: Error al actualizar el estado
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+router.post(
+  "/api/shipment/storeTransporter",
+  validateBodyAuth.authorization,
+  validateBodyAuth.validateTransporter,
+  shipmentController.storeTransporter.bind(shipmentController)
+);
+
 export default router;

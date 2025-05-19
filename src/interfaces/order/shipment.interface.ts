@@ -49,7 +49,7 @@ export interface ShipmentUpdateStatusRequest
   extends Pick<ShipmentEntity, "id" | "status"> {}
 
 export interface Filter {
-  page?:number;
+  page?: number;
   pageSize?:number;
   search: string;
   route_id?: number;

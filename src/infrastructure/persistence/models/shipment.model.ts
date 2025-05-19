@@ -129,7 +129,7 @@ export class ShipmentModel implements IShipmentRepository {
     if (userRows.length === 0) {
       throw new Error(`User with id ${userId} not found`);
     }
-
+  
     const user = userRows[0];
     const { role } = user;
 
@@ -161,7 +161,8 @@ export class ShipmentModel implements IShipmentRepository {
       conditions.push("s.user_id = ?");
       values.push(userId);
     }
-
+    const pageNumber = Number(parameters.page) || 1;
+    const pageSizeNumber = Number(parameters.pageSize) || 10;
     // Añadimos condiciones según los filtros proporcionados
     this.applyFilters(conditions, values, {
       search,
@@ -171,17 +172,15 @@ export class ShipmentModel implements IShipmentRepository {
       startDate,
       endDate,
     });
-
     // Añadimos las condiciones a la consulta SQL
     if (conditions.length) {
       sql += " AND " + conditions.join(" AND ");
     }
 
     // Paginación: calcular offset y limitar resultados
-    const offset = (page - 1) * pageSize;
-    const limit = pageSize;
+    const offset = (pageNumber - 1) * pageSizeNumber;
+    const limit = pageSizeNumber;
     sql += ` LIMIT ${limit} OFFSET ${offset}`;
-    values.push(limit, offset);
 
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, values);
@@ -191,6 +190,53 @@ export class ShipmentModel implements IShipmentRepository {
         "Error finding shipments by user ID with pagination",
         error
       );
+    }
+  }
+  // Métodos privados de ayuda
+
+  /**
+   * Aplica filtros a la consulta SQL
+   */
+  private applyFilters(
+    conditions: string[],
+    values: any[],
+    filters: Filter
+  ): void {
+    const { search, status, route_id, transporter_id, startDate, endDate } =
+      filters;
+
+    if (search) {
+      conditions.push("s.tracking_number = ?");
+      values.push(search);
+    }
+
+    if (status) {
+      conditions.push("s.status = ?");
+      values.push(status);
+    }
+
+    if (route_id) {
+      console.log("route_id", route_id);
+
+      conditions.push("s.route_id = ?");
+      values.push(route_id);
+    }
+
+    if (transporter_id) {
+      conditions.push("s.transporter_id = ?");
+      values.push(transporter_id);
+    }
+
+    // Filtro por rango de fechas
+    if (startDate && endDate) {
+      conditions.push("s.estimated_delivery_date BETWEEN ? AND ?");
+      values.push(startDate, endDate);
+    } else if (startDate) {
+      conditions.push("s.estimated_delivery_date >= ?");
+      values.push(startDate);
+    } else if (endDate) {
+      conditions.push("s.estimated_delivery_date <= ?");
+      values.push(endDate);
     }
   }
 
@@ -278,52 +324,6 @@ export class ShipmentModel implements IShipmentRepository {
         "Error finding all shipments with pagination",
         error
       );
-    }
-  }
-
-  // Métodos privados de ayuda
-
-  /**
-   * Aplica filtros a la consulta SQL
-   */
-  private applyFilters(
-    conditions: string[],
-    values: any[],
-    filters: Filter
-  ): void {
-    const { search, status, route_id, transporter_id, startDate, endDate } =
-      filters;
-
-    if (search) {
-      conditions.push("s.tracking_number = ?");
-      values.push(search);
-    }
-
-    if (status) {
-      conditions.push("s.status = ?");
-      values.push(status);
-    }
-
-    if (route_id) {
-      conditions.push("s.route_id = ?");
-      values.push(route_id);
-    }
-
-    if (transporter_id) {
-      conditions.push("s.transporter_id = ?");
-      values.push(transporter_id);
-    }
-
-    // Filtro por rango de fechas
-    if (startDate && endDate) {
-      conditions.push("s.estimated_delivery_date BETWEEN ? AND ?");
-      values.push(startDate, endDate);
-    } else if (startDate) {
-      conditions.push("s.estimated_delivery_date >= ?");
-      values.push(startDate);
-    } else if (endDate) {
-      conditions.push("s.estimated_delivery_date <= ?");
-      values.push(endDate);
     }
   }
 }

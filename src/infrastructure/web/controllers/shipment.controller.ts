@@ -4,7 +4,10 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../../../interfaces/auth/IGetUser";
 import { ShipmentService } from "../../../application/shipping/shipment.service";
 import { container } from "../../../infrastructure/container";
-import { Filter, ShipmentUpdateStatusRequest } from "../../../interfaces/order/shipment.interface";
+import {
+  Filter,
+  ShipmentUpdateStatusRequest,
+} from "../../../interfaces/order/shipment.interface";
 import { ShipmentDTO } from "../../../application/dto/shipment.dto";
 
 export class ShipmentController {
@@ -61,7 +64,9 @@ export class ShipmentController {
         pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
         search: req.query.search as string,
         route_id: req.query.route_id ? Number(req.query.route_id) : undefined,
-        transporter_id: req.query.transporter_id ? Number(req.query.transporter_id) : undefined,
+        transporter_id: req.query.transporter_id
+          ? Number(req.query.transporter_id)
+          : undefined,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
         status: req.query.status as string,
@@ -277,6 +282,32 @@ export class ShipmentController {
       res.status(200).json({
         message: "Metricas del mes disponibles, éxito",
         data: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+  async storeTransporter(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+
+      const parameters = req.body;
+      const transporterData = {
+        name: parameters.name as string,
+        vehicle_capacity: Number(parameters.vehicle_capacity),
+      };
+      const result = await this.shipmentService.storeTransporter(
+        transporterData
+      );
+
+      res.status(200).json({
+        message: "Transportes disponibles, éxito",
+        transporters: result,
       });
     } catch (error) {
       console.error("Error en getUserShipments:", error);

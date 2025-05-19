@@ -8,7 +8,10 @@ import {
   ShipmentDTO,
   ShipmentResponseDTO,
 } from "../dto/shipment.dto";
-import { Filter, ShipmentStatus } from "../../interfaces/order/shipment.interface";
+import {
+  Filter,
+  ShipmentStatus,
+} from "../../interfaces/order/shipment.interface";
 import { Shipment } from "../../domain/order/shipment.entity";
 import { AddressValidationService } from "../../infrastructure/services/address-validation.service.interface";
 import { RouteRepository } from "../../interfaces/repositories/route.repository.interface";
@@ -17,6 +20,7 @@ import { TransporterDTO } from "../dto/transporter.dto";
 import { ValidateWeightCapacityService } from "../../interfaces/services/validateWeightCapacity.service.interface";
 import { emitUpdate } from "../../infrastructure/websocket/socket";
 import { Server as SocketIOServer } from "socket.io";
+import { TransporterEntity } from "../../interfaces/transporter/transporter.interface";
 
 export class ShipmentService {
   constructor(
@@ -247,24 +251,51 @@ export class ShipmentService {
     }
   }
 
-  async getMonthlyPerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+  async getMonthlyPerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
     try {
-      return await this.shipmentRepository.getMonthlyPerformanceMetrics(parameters);
+      return await this.shipmentRepository.getMonthlyPerformanceMetrics(
+        parameters
+      );
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
     }
   }
-  async getRoutePerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+  async getRoutePerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
     try {
-      return await this.shipmentRepository.getRoutePerformanceMetrics(parameters);
+      return await this.shipmentRepository.getRoutePerformanceMetrics(
+        parameters
+      );
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
     }
   }
 
-  async getTransporterPerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+  async getTransporterPerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
     try {
-      return await this.shipmentRepository.getTransporterPerformanceMetrics(parameters);
+      return await this.shipmentRepository.getTransporterPerformanceMetrics(
+        parameters
+      );
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+    }
+  }
+
+  async storeTransporter(
+    data: Omit<
+      TransporterEntity,
+      "id" | "created_at" | "updated_at" | "available"
+    >
+  ): Promise<
+    Omit<TransporterEntity, "created_at" | "updated_at" | "available">
+  > {
+    try {
+      return await this.shipmentRepository.storeTransporter(data);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
     }

@@ -3,6 +3,7 @@ import {
   ShipmentDTO,
 } from "../../application/dto/shipment.dto";
 import { Filter, ShipmentStatus } from "../order/shipment.interface";
+import { TransporterEntity } from "../transporter/transporter.interface";
 
 export interface ShipmentRepository {
   create(shipment: CreateShipmentDTO): Promise<ShipmentDTO>;
@@ -24,4 +25,13 @@ export interface ShipmentRepository {
   getMonthlyPerformanceMetrics(
     parameters: Pick<Filter, "startDate" | "endDate">
   ): Promise<any>;
+
+  storeTransporter(
+    data: Omit<
+      TransporterEntity,
+      "id" | "created_at" | "updated_at" | "available"
+    >
+  ): Promise<
+    Omit<TransporterEntity, "created_at" | "updated_at" | "available">
+  >;
 }

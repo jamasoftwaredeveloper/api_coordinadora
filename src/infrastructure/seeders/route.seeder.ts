@@ -15,7 +15,7 @@ async function isTableEmpty(pool: Pool): Promise<boolean> {
 // Insertar rutas predeterminadas
 async function insertDefaultRoutes(pool: Pool): Promise<void> {
   const sql = `
-    INSERT INTO users (name, capacity, available) VALUES 
+    INSERT INTO routes (name, capacity, available) VALUES 
     (?, ?, ?), 
     (?, ?, ?), 
     (?, ?, ?);

@@ -19,6 +19,11 @@ RUN npm install
 RUN npm install redis @types/redis
 RUN npm rebuild bcrypt --build-from-source
 
+# Ejecutar migraciones.
+RUN npx ts-node src/infrastructure/config/runMigrations.ts
+# Ejecutar datos semilla
+RUN npx ts-node src/infrastructure/config/runSeeders.ts
+
 # Copiamos el resto del código
 COPY . .
 
