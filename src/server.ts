@@ -1,28 +1,40 @@
-// const express = require("express"); //CJS CommonJS module system
-import express from "express"; //ESM EcmaScript module system
+import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import router from "./routes/auth";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+import colors from "colors";
 
-import { corsConfig } from "./config/cors";
-import User from "./models/User";
+// Importar rutas y configuraciones
+import authRouter from "./infrastructure/web/routes/auth";
+import shipmentRouter from "./infrastructure/web/routes/shipment";
+import { swaggerDocs } from "./swagger";
+import { corsConfig } from "./infrastructure/config/cors";
+import { initializeSocket } from "./infrastructure/websocket/socket";
 
+// Crear la aplicación de Express
 const app = express();
-//Cors
+
+// Crear el servidor HTTP y el servidor de Socket.IO
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT"],
+  },
+});
+
+// Iniciar Socket.IO
+initializeSocket(io);
+
+// Configuración del servidor
+const port = parseInt(process.env.PORT || "4000", 10);
+swaggerDocs(app, port);
 app.use(cors(corsConfig));
-(async () => {
-    try {
-      await User.createTable();
-      console.log('Tabla de usuarios inicializada');
-    } catch (error) {
-      console.error('Error al inicializar tabla de usuarios:', error);
-    }
-  })();
-//Conexión a base datos
-
-// routes
-//Leer datos de json
 app.use(express.json());
-app.use("/", router);
 
-export default app;
+// Rutas
+app.use("/", authRouter);
+app.use("/", shipmentRouter);
+
+export { server, io };
