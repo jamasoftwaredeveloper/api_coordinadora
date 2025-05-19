@@ -6,13 +6,22 @@ import {
   CreateShipmentDTO,
 } from "../../../application/dto/shipment.dto";
 import { shipmentModel, ShipmentModel } from "../models/shipment.model";
-import { Filter, ShipmentStatus } from "../../../interfaces/order/shipment.interface";
+import {
+  Filter,
+  ShipmentStatus,
+} from "../../../interfaces/order/shipment.interface";
+import {
+  transporterMetricsModel,
+  TransporterMetricsModel,
+} from "../models/transporterMetrics.model";
 
 export class ShipmentRepositoryImpl implements ShipmentRepository {
   private shipmentModel: ShipmentModel;
+  private transporterMetricsModel: TransporterMetricsModel;
 
   constructor() {
     this.shipmentModel = shipmentModel;
+    this.transporterMetricsModel = transporterMetricsModel;
   }
 
   async create(shipment: CreateShipmentDTO): Promise<ShipmentDTO> {
@@ -46,5 +55,32 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
 
   async findAll(): Promise<ShipmentDTO[]> {
     return await this.shipmentModel.findAll();
+  }
+
+  async getTransporterPerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
+    return await this.transporterMetricsModel.getTransporterPerformanceMetrics(
+      new Date(parameters.startDate),
+      new Date(parameters.endDate)
+    );
+  }
+
+  async getRoutePerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
+    return await this.transporterMetricsModel.getRoutePerformanceMetrics(
+      new Date(parameters.startDate),
+      new Date(parameters.endDate)
+    );
+  }
+
+  async getMonthlyPerformanceMetrics(
+    parameters: Pick<Filter, "startDate" | "endDate">
+  ): Promise<any> {
+    return await this.transporterMetricsModel.getMonthlyPerformanceMetrics(
+      new Date(parameters.startDate),
+      new Date(parameters.endDate)
+    );
   }
 }

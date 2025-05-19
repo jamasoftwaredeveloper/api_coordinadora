@@ -1,6 +1,6 @@
 // src/infrastructure/persistence/models/shipment.model.ts
 
-import { Pool, ResultSetHeader } from "mysql2/promise";
+import { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { ShipmentDTO } from "../../../application/dto/shipment.dto";
 import { getDbPool } from "../../config/db";
 import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
@@ -11,10 +11,12 @@ import {
   ShipmentWithRouteInfo,
 } from "../../../interfaces/order/shipment.interface";
 import { IShipmentRepository } from "../../../domain/repositories/IShipmentRepository";
-import { mapRowToShipmentDTO, mapRowToShipmentWithRouteInfo } from "../../../utils/shipment";
+import {
+  mapRowToShipmentDTO,
+  mapRowToShipmentWithRouteInfo,
+} from "../../../utils/shipment";
 
 // Interfaces para tipar los resultados
-
 
 /**
  * Implementación del repositorio de envíos usando MySQL
@@ -56,7 +58,7 @@ export class ShipmentModel implements IShipmentRepository {
         trackingNumber,
         estimatedDeliveryDate,
       ]);
-    
+
       return {
         ...shipmentData,
         id: result.insertId,
@@ -74,9 +76,9 @@ export class ShipmentModel implements IShipmentRepository {
 
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [id]);
-      
+
       if (rows.length === 0) return null;
-      
+
       return mapRowToShipmentDTO(rows[0]);
     } catch (error) {
       throw new DatabaseError("Error finding shipment by ID", error);
@@ -92,10 +94,12 @@ export class ShipmentModel implements IShipmentRepository {
     const sql = `SELECT * FROM shipments WHERE tracking_number = ?`;
 
     try {
-      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [trackingNumber]);
-      
+      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [
+        trackingNumber,
+      ]);
+
       if (rows.length === 0) return null;
-      
+
       return mapRowToShipmentDTO(rows[0]);
     } catch (error) {
       throw new DatabaseError(
@@ -106,75 +110,127 @@ export class ShipmentModel implements IShipmentRepository {
   }
 
   /**
-   * Busca envíos por ID de usuario aplicando filtros opcionales
+   * Busca envíos por ID de usuario aplicando filtros opcionales con paginación
+   * @param userId ID del usuario
+   * @param parameters Filtros opcionales
+   * @param page Número de página (empieza desde 1)
+   * @param pageSize Cantidad de registros por página
    */
   public async findByUserId(
     userId: number,
     parameters: Filter
   ): Promise<ShipmentWithRouteInfo[]> {
-    const { search, status, route_id, transporter_id, startDate, endDate } = parameters;
+    // 1. Obtener el usuario y su rol
+    const [userRows] = await this.pool.execute<RowDataPacket[]>(
+      "SELECT id, role FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      throw new Error(`User with id ${userId} not found`);
+    }
+
+    const user = userRows[0];
+    const { role } = user;
+
+    const {
+      search,
+      status,
+      route_id,
+      transporter_id,
+      startDate,
+      endDate,
+      page,
+      pageSize,
+    } = parameters;
 
     // Construimos la consulta base
     let sql = `
-      SELECT s.*, t.name as transporter, r.name as route 
-      FROM shipments s
-      LEFT JOIN routes r ON s.route_id = r.id
-      LEFT JOIN transporters t ON s.transporter_id = t.id
-      WHERE s.user_id = ?
-    `;
+    SELECT s.*, t.name as transporter, r.name as route
+    FROM shipments s
+    LEFT JOIN routes r ON s.route_id = r.id
+    LEFT JOIN transporters t ON s.transporter_id = t.id
+    WHERE 1=1
+  `;
 
     const conditions: string[] = [];
-    const values: any[] = [userId];
+    const values: any[] = [];
+
+    // Si no es admin, filtramos por user_id
+    if (role !== "admin") {
+      conditions.push("s.user_id = ?");
+      values.push(userId);
+    }
 
     // Añadimos condiciones según los filtros proporcionados
-    this.applyFilters(conditions, values, { search, status, route_id, transporter_id, startDate, endDate });
+    this.applyFilters(conditions, values, {
+      search,
+      status,
+      route_id,
+      transporter_id,
+      startDate,
+      endDate,
+    });
 
     // Añadimos las condiciones a la consulta SQL
     if (conditions.length) {
       sql += " AND " + conditions.join(" AND ");
     }
 
+    // Paginación: calcular offset y limitar resultados
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+    sql += ` LIMIT ${limit} OFFSET ${offset}`;
+    values.push(limit, offset);
+
     try {
       const [rows] = await this.pool.execute<ShipmentRow[]>(sql, values);
-      return rows.map(row => mapRowToShipmentWithRouteInfo(row));
+      return rows.map((row) => mapRowToShipmentWithRouteInfo(row));
     } catch (error) {
-      throw new DatabaseError("Error finding shipments by user ID", error);
+      throw new DatabaseError(
+        "Error finding shipments by user ID with pagination",
+        error
+      );
     }
   }
 
   /**
-   * Actualiza el estado de un envío
+   * Actualiza el estado de un envío y actualiza el campo updated_at
    */
   public async updateStatus(
     id: number,
     status: ShipmentStatus
   ): Promise<boolean> {
     const connection = await this.pool.getConnection();
-    
+
     try {
       await connection.beginTransaction();
-      
-      // Actualizar estado del envío
+
+      // Actualizar estado y timestamp del envío
       const [result] = await connection.execute<ResultSetHeader>(
-        'UPDATE shipments SET status = ? WHERE id = ?',
+        `UPDATE shipments 
+       SET status = ?, updated_at = NOW() 
+       WHERE id = ?`,
         [status, id]
       );
-      
+
       // Si se actualizó correctamente y el envío tiene transportador asignado
       if (result.affectedRows > 0) {
         const [shipmentRows] = await connection.execute<ShipmentRow[]>(
-          'SELECT transporter_id FROM shipments WHERE id = ?',
+          "SELECT transporter_id FROM shipments WHERE id = ?",
           [id]
         );
-        
+
         if (shipmentRows.length > 0 && shipmentRows[0].transporter_id) {
           await connection.execute<ResultSetHeader>(
-            'UPDATE transporters SET available = 1 WHERE id = ?',
+            `UPDATE transporters 
+           SET available = 1, updated_at = NOW() 
+           WHERE id = ?`,
             [shipmentRows[0].transporter_id]
           );
         }
       }
-      
+
       await connection.commit();
       return result.affectedRows > 0;
     } catch (error) {
@@ -200,16 +256,28 @@ export class ShipmentModel implements IShipmentRepository {
   }
 
   /**
-   * Lista todos los envíos
+   * Lista todos los envíos con paginación
+   * @param page Número de página (empieza desde 1)
+   * @param pageSize Cantidad de registros por página
    */
-  public async findAll(): Promise<ShipmentDTO[]> {
-    const sql = `SELECT * FROM shipments`;
+  public async findAll(
+    page: number = 1,
+    pageSize: number = 10
+  ): Promise<ShipmentDTO[]> {
+    const offset = (page - 1) * pageSize;
+    const sql = `SELECT * FROM shipments LIMIT ? OFFSET ?`;
 
     try {
-      const [rows] = await this.pool.execute<ShipmentRow[]>(sql);
-      return rows.map(row => mapRowToShipmentDTO(row));
+      const [rows] = await this.pool.execute<ShipmentRow[]>(sql, [
+        pageSize,
+        offset,
+      ]);
+      return rows.map((row) => mapRowToShipmentDTO(row));
     } catch (error) {
-      throw new DatabaseError("Error finding all shipments", error);
+      throw new DatabaseError(
+        "Error finding all shipments with pagination",
+        error
+      );
     }
   }
 
@@ -223,7 +291,8 @@ export class ShipmentModel implements IShipmentRepository {
     values: any[],
     filters: Filter
   ): void {
-    const { search, status, route_id, transporter_id, startDate, endDate } = filters;
+    const { search, status, route_id, transporter_id, startDate, endDate } =
+      filters;
 
     if (search) {
       conditions.push("s.tracking_number = ?");

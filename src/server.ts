@@ -12,12 +12,6 @@ import { swaggerDocs } from "./swagger";
 import { corsConfig } from "./infrastructure/config/cors";
 import { initializeSocket } from "./infrastructure/websocket/socket";
 
-// Modelos de base de datos
-import userModel from "./infrastructure/persistence/models/user.model";
-import { shipmentModel } from "./infrastructure/persistence/models/shipment.model";
-import { routeModel } from "./infrastructure/persistence/models/route.model";
-import { transporterModel } from "./infrastructure/persistence/models/transporter.model";
-
 // Crear la aplicación de Express
 const app = express();
 
@@ -38,14 +32,6 @@ const port = parseInt(process.env.PORT || "4000", 10);
 swaggerDocs(app, port);
 app.use(cors(corsConfig));
 app.use(express.json());
-
-// Inicialización de tablas en la base de datos
-(async () => {
-  try {
-    await userModel.createTable();
-  } catch (error) {
-  }
-})();
 
 // Rutas
 app.use("/", authRouter);

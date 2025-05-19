@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validateBodyAuth } from "../middlewares/auth/registerValidation";
 import { shipmentController } from "../controllers/shipment.controller";
 import { validateShipmentMiddleware } from "../middlewares/shipment/validate-shipment.middleware";
-import { cache } from '../middlewares/redis/cache';
+import { cache } from "../middlewares/redis/cache";
 const router = Router();
 
 /**
@@ -125,10 +125,10 @@ router.post(
 
 /**
  * @swagger
- * /api/shipment/userShipments/{search}/{routeId}/{transporterId}/{dateStart}/{dateEnd}:
+ * /api/shipment/userShipments/{search}/{routeId}/{transporterId}/{dateStart}/{dateEnd}/{page}/{pageSize}:
  *   get:
- *     summary: Obtiene los envíos de un usuario
- *     tags: [Órdenes de envío]
+ *     summary: Obtiene los envíos de un usuario con paginación
+ *     tags: [Ordenes de envio]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -164,6 +164,18 @@ router.post(
  *           format: date
  *         required: false
  *         description: Fecha de finalización del envío
+ *       - in: path
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Número de página para la paginación
+ *       - in: path
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Cantidad de elementos por página
  *     responses:
  *       200:
  *         description: Envíos obtenidos con éxito
@@ -330,4 +342,114 @@ router.get(
   shipmentController.allTransporters.bind(shipmentController)
 );
 
+/**
+ * @swagger
+ * /api/shipment/getMonthlyPerformanceMetrics/{dateStart}/{dateEnd}:
+ *   get:
+ *     summary: Obtenga métricas de rendimiento mensuales
+ *     tags: [Metricas]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dateStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de inicio del envío
+ *       - in: path
+ *         name: dateEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de finalización del envío
+ *     responses:
+ *       200:
+ *         description: Envíos obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/getMonthlyPerformanceMetrics",
+  validateBodyAuth.authorization,
+  shipmentController.getMonthlyPerformanceMetrics.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/getRoutePerformanceMetrics/{dateStart}/{dateEnd}:
+ *   get:
+ *     summary: Obtener métricas de rendimiento de la ruta
+ *     tags: [Metricas]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dateStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de inicio del envío
+ *       - in: path
+ *         name: dateEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de finalización del envío
+ *     responses:
+ *       200:
+ *         description: Envíos obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/getRoutePerformanceMetrics",
+  validateBodyAuth.authorization,
+  shipmentController.getRoutePerformanceMetrics.bind(shipmentController)
+);
+
+/**
+ * @swagger
+ * /api/shipment/getTransporterPerformanceMetrics/{dateStart}/{dateEnd}:
+ *   get:
+ *     summary: Obtener métricas de rendimiento del transportador
+ *     tags: [Metricas]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dateStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de inicio del envío
+ *       - in: path
+ *         name: dateEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Fecha de finalización del envío
+ *     responses:
+ *       200:
+ *         description: Envíos obtenidos con éxito
+ *       401:
+ *         description: Usuario no autenticado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get(
+  "/api/shipment/getTransporterPerformanceMetrics",
+  validateBodyAuth.authorization,
+  shipmentController.getTransporterPerformanceMetrics.bind(shipmentController)
+);
 export default router;

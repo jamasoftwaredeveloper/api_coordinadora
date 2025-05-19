@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../../../interfaces/auth/IGetUser";
 import { ShipmentService } from "../../../application/shipping/shipment.service";
 import { container } from "../../../infrastructure/container";
-import { ShipmentUpdateStatusRequest } from "../../../interfaces/order/shipment.interface";
+import { Filter, ShipmentUpdateStatusRequest } from "../../../interfaces/order/shipment.interface";
 import { ShipmentDTO } from "../../../application/dto/shipment.dto";
 
 export class ShipmentController {
@@ -56,7 +56,16 @@ export class ShipmentController {
         return;
       }
 
-      const parameters = req.query;
+      const parameters: Filter = {
+        page: req.query.page ? Number(req.query.page) : undefined,
+        pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
+        search: req.query.search as string,
+        route_id: req.query.route_id ? Number(req.query.route_id) : undefined,
+        transporter_id: req.query.transporter_id ? Number(req.query.transporter_id) : undefined,
+        startDate: req.query.startDate as string,
+        endDate: req.query.endDate as string,
+        status: req.query.status as string,
+      };
 
       const result = await this.shipmentService.getShipmentsByUserId(
         userId,
@@ -115,7 +124,7 @@ export class ShipmentController {
   async updateStatus(req: Request, res: Response): Promise<boolean> {
     try {
       const { id, status }: ShipmentUpdateStatusRequest = req.body;
-      
+
       const result = await this.shipmentService.updateStatus(id, status);
       if (result.isError) {
         res.status(result.statusCode || 400).json({
@@ -137,7 +146,7 @@ export class ShipmentController {
   async assignRouteToShipment(req: Request, res: Response): Promise<void> {
     try {
       const { id, route_id, transporter_id } = req.body;
-      
+
       const result = await this.shipmentService.assignRouteToShipment({
         id,
         routeId: route_id,
@@ -193,6 +202,81 @@ export class ShipmentController {
       res.status(200).json({
         message: "Transportes disponible disponibles éxito",
         transporters: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async getTransporterPerformanceMetrics(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+
+      const parameters = req.query;
+      const result =
+        await this.shipmentService.getTransporterPerformanceMetrics(parameters);
+
+      res.status(200).json({
+        message: "Transportes disponibles, éxito",
+        transporters: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async getRoutePerformanceMetrics(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+      const parameters = req.query;
+      const result = await this.shipmentService.getRoutePerformanceMetrics(
+        parameters
+      );
+
+      res.status(200).json({
+        message: "Rutas disponibles, éxito",
+        routes: result,
+      });
+    } catch (error) {
+      console.error("Error en getUserShipments:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+
+  async getMonthlyPerformanceMetrics(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const userId = Number(req.user_id);
+      if (!userId) {
+        res.status(401).json({ message: "Usuario no autenticado" });
+        return;
+      }
+      const parameters = req.query;
+      const result = await this.shipmentService.getMonthlyPerformanceMetrics(
+        parameters
+      );
+
+      res.status(200).json({
+        message: "Metricas del mes disponibles, éxito",
+        data: result,
       });
     } catch (error) {
       console.error("Error en getUserShipments:", error);

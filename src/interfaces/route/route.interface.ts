@@ -5,7 +5,7 @@ import { TransporterDTO } from "../../application/dto/transporter.dto";
 export interface RouteEntity {
   id: number;
   name: string;
-  vehicle_capacity: number;
+  capacity: number;
   available: boolean;
   createdAt?: Date;
   updatedAt?: Date;

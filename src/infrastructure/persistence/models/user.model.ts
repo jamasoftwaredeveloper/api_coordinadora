@@ -12,69 +12,6 @@ class UserModel {
   constructor() {
     this.pool = getDbPool();
   }
-  // Crear la tabla de usuarios si no existe
-  public async createTable(): Promise<void> {
-    const sql = `
-        CREATE TABLE IF NOT EXISTS users (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          email VARCHAR(100) NOT NULL UNIQUE,
-          password VARCHAR(255) NOT NULL,
-          role VARCHAR(50) DEFAULT 'client',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-      `;
-
-    try {
-      await this.pool.execute<ResultSetHeader>(sql);
-
-      // Verificar si la tabla está vacía
-      const isEmpty = await this.isTableEmpty();
-      if (isEmpty) {
-        await this.insertDefaultUsers();
-      }
-    } catch (error) {
-      throw new DatabaseError("Error creating users table", error);
-    }
-  }
-
-  // Insertar transportistas predeterminados
-  private async insertDefaultUsers(): Promise<void> {
-    try {
-      await this.create({
-        name: "admin",
-        email: "admin@gmail.com",
-        password:
-          "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
-          role: "admin",
-      });
-      await this.create({
-        name: "test",
-        email: "test@gmail.com",
-        password:
-          "$2b$10$tXTmoN8NAH4KSIHRMvQkYOsDFvlNPkfY.CArCUCgH/87jTtn/SFuW",
-      });
-    } catch (error) {
-      throw new DatabaseError(
-        "Error al insertar transportistas predeterminados",
-        error
-      );
-    }
-  }
-
-  private async isTableEmpty(): Promise<boolean> {
-    const sql = `SELECT COUNT(*) AS count FROM users`;
-    try {
-      const [rows] = await this.pool.query<RowDataPacket[]>(sql);
-      return rows[0].count === 0;
-    } catch (error) {
-      throw new DatabaseError(
-        "Error al verificar si la tabla está vacía",
-        error
-      );
-    }
-  }
 
   // Crear un nuevo usuario
   public async create(

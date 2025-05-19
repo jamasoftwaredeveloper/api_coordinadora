@@ -3,7 +3,7 @@ import { RouteEntity } from "../../interfaces/route/route.interface";
 export class Route implements RouteEntity {
   id: number;
   name: string;
-  vehicle_capacity: number;
+  capacity: number;
   available: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -11,7 +11,7 @@ export class Route implements RouteEntity {
   constructor(data: RouteEntity) {
     this.id = data.id;
     this.name = data.name;
-    this.vehicle_capacity = data.vehicle_capacity;
+    this.capacity = data.capacity;
     this.available = data.available;
   }
 }

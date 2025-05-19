@@ -8,7 +8,7 @@ import {
   ShipmentDTO,
   ShipmentResponseDTO,
 } from "../dto/shipment.dto";
-import { ShipmentStatus } from "../../interfaces/order/shipment.interface";
+import { Filter, ShipmentStatus } from "../../interfaces/order/shipment.interface";
 import { Shipment } from "../../domain/order/shipment.entity";
 import { AddressValidationService } from "../../infrastructure/services/address-validation.service.interface";
 import { RouteRepository } from "../../interfaces/repositories/route.repository.interface";
@@ -91,7 +91,7 @@ export class ShipmentService {
         subject: "Orden de envío creada con éxito",
         content: `Tu orden de envío ha sido creada con éxito. Número de seguimiento: ${trackingNumber}`,
       });
-      emitUpdate(this.io, { message:"Nuevo dato"});
+      emitUpdate(this.io, { message: "Nuevo dato" });
       // Devolver respuesta
       return Result.ok({
         id: createdShipment.id!,
@@ -110,7 +110,7 @@ export class ShipmentService {
   // Otros métodos del servicio...
   async getShipmentsByUserId(
     userId: number,
-    parameters?: object
+    parameters?: Filter
   ): Promise<Result<ShipmentResponseDTO[]>> {
     try {
       const shipments = await this.shipmentRepository.findByUserId(
@@ -166,12 +166,11 @@ export class ShipmentService {
     status: ShipmentStatus
   ): Promise<Result<boolean>> {
     try {
-
       const shipment = await this.shipmentRepository.updateStatus(id, status);
       if (!shipment) {
         return Result.fail("No se pudo actualizar el estado del envío", 404);
       }
-      emitUpdate(this.io, { message:"Actualizado dato"});
+      emitUpdate(this.io, { message: "Actualizado dato" });
       return Result.ok(shipment);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
@@ -240,11 +239,34 @@ export class ShipmentService {
       }
 
       await this.shipmentRepository.updateStatus(id, ShipmentStatus.PROCESSING);
-      emitUpdate(this.io, { message:"Orden asignada"});
+      emitUpdate(this.io, { message: "Orden asignada" });
       return Result.ok(result);
     } catch (error) {
       console.error("Error al obtener los envíos:", error);
       return Result.fail("Error al obtener los envíos del usuario", 500);
+    }
+  }
+
+  async getMonthlyPerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+    try {
+      return await this.shipmentRepository.getMonthlyPerformanceMetrics(parameters);
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+    }
+  }
+  async getRoutePerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+    try {
+      return await this.shipmentRepository.getRoutePerformanceMetrics(parameters);
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
+    }
+  }
+
+  async getTransporterPerformanceMetrics(parameters: Pick<Filter, "startDate" | "endDate">): Promise<any> {
+    try {
+      return await this.shipmentRepository.getTransporterPerformanceMetrics(parameters);
+    } catch (error) {
+      console.error("Error al obtener los envíos:", error);
     }
   }
 }
