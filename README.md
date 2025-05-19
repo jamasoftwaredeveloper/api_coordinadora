@@ -107,6 +107,9 @@ Si prefieres utilizar Docker, sigue estos pasos:
    ```bash
    docker-compose up -d
    ```
+# URL
+Para ingresar a la documentación
+http://localhost:4000/api-docs/
 
 ## Estructura del proyecto
 
