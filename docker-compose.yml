@@ -1,0 +1,106 @@
+version: '1'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-1
+    volumes:
+      - .:/app:delegated
+      # - /app/node_modules   # <- esta línea se elimina para evitar sobreescribir node_modules
+    ports:
+      - "4000:4000"
+    command: >
+      bash -c "npm rebuild bcrypt --build-from-source && npm run dev"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=development
+      - MYSQL_HOST=mysql-container
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=1993
+      - MYSQL_DB=db_coordinadora
+      - BCRYPT_FORCE_REBUILD=1
+      - REDIS_URL=redis://redis:6379
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    networks:
+      - app-network
+    environment:
+      MYSQL_DATABASE: db_coordinadora
+      MYSQL_ROOT_PASSWORD: 1993
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./my_custom.cnf:/etc/mysql/conf.d/my_custom.cnf
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p1993 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container
+    restart: always
+    networks:
+      - app-network
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql-container
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: 1993
+      PMA_USER: root
+      PMA_PASSWORD: 1993
+    depends_on:
+      - mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command:
+      [
+        "redis-server",
+        "--save", "60", "1",
+        "--loglevel", "warning"
+      ]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    name: coordinadora_mysql_data
+  redis_data:
+    name: coordinadora_redis_data
