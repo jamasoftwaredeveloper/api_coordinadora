@@ -6,7 +6,7 @@ import {
   CreateShipmentDTO,
 } from "../../../application/dto/shipment.dto";
 import { shipmentModel, ShipmentModel } from "../models/shipment.model";
-import { ShipmentStatus } from "../../../interfaces/order/shipment.interface";
+import { Filter, ShipmentStatus } from "../../../interfaces/order/shipment.interface";
 
 export class ShipmentRepositoryImpl implements ShipmentRepository {
   private shipmentModel: ShipmentModel;
@@ -32,8 +32,8 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
     return await this.shipmentModel.findByTrackingNumber(trackingNumber);
   }
 
-  async findByUserId(userId: number,search:object): Promise<ShipmentDTO[]> {
-    return await this.shipmentModel.findByUserId(userId,search);
+  async findByUserId(userId: number, search: Filter): Promise<ShipmentDTO[]> {
+    return await this.shipmentModel.findByUserId(userId, search);
   }
 
   async updateStatus(id: number, status: ShipmentStatus): Promise<boolean> {
@@ -46,9 +46,5 @@ export class ShipmentRepositoryImpl implements ShipmentRepository {
 
   async findAll(): Promise<ShipmentDTO[]> {
     return await this.shipmentModel.findAll();
-  }
-
-  async initializeTable(): Promise<void> {
-    await this.shipmentModel.createTable();
   }
 }

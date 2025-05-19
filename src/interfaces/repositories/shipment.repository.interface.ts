@@ -9,5 +9,4 @@ export interface ShipmentRepository {
   updateStatus(id: number, status: ShipmentStatus): Promise<boolean>;
   delete(id: number): Promise<boolean>;
   findAll(): Promise<ShipmentDTO[]>;
-  initializeTable(): Promise<void>;
 }

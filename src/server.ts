@@ -43,9 +43,6 @@ app.use(express.json());
 (async () => {
   try {
     await userModel.createTable();
-    await routeModel.createTable();
-    await transporterModel.createTable();
-    await shipmentModel.createTable();
   } catch (error) {
   }
 })();

@@ -1,157 +1,133 @@
+// src/infrastructure/persistence/models/route.model.ts
+
 import { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { getDbPool } from "../../config/db";
-import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
-import { RouteDTO } from "../../../application/dto/route.dto";
 import { AssingShipmentDTO } from "../../../application/dto/shipment.dto";
 import { TransporterDTO } from "../../../application/dto/transporter.dto";
+import { RouteRow, TransporterRow } from "../../../interfaces/route/route.interface";
+import { IRouteRepository } from "../../../domain/repositories/IRouteRepository";
+import { DatabaseError } from "../../../interfaces/errors/DatabaseError";
 
-// Interfaces para tipar los resultados
-interface RouteRow
-  extends RowDataPacket,
-    Omit<RouteDTO, "createdAt" | "updatedAt"> {
-  created_at: Date;
-  updated_at: Date;
-}
+/**
+ * Implementación del repositorio de rutas usando MySQL
+ */
+export class RouteModel implements IRouteRepository {
+  private readonly pool: Pool;
 
-interface TransporterRow
-  extends RowDataPacket,
-    Omit<TransporterDTO, "createdAt" | "updatedAt"> {
-  created_at: Date;
-  updated_at: Date;
-}
-
-export class RouteModel {
-  private pool: Pool;
-
-  constructor() {
-    this.pool = getDbPool();
+  /**
+   * Constructor que permite inyección de dependencias para facilitar testing
+   * @param pool Conexión a la base de datos (opcional, usa la conexión por defecto si no se proporciona)
+   */
+  constructor(pool?: Pool) {
+    this.pool = pool || getDbPool();
   }
 
-  // Crear la tabla de rutas si no existe
-  public async createTable(): Promise<void> {
-    const sql = `
-      CREATE TABLE IF NOT EXISTS routes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        capacity INT NOT NULL,
-        available BOOLEAN DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-    `;
-
-    try {
-      // Crear la tabla si no existe
-      await this.pool.execute<ResultSetHeader>(sql);
-      // Verificar si la tabla está vacía
-      const isEmpty = await this.isTableEmpty();
-      if (isEmpty) {
-        await this.insertDefaultRoutes();
-      }
-    } catch (error) {
-      throw new DatabaseError(
-        "Error al crear o verificar la tabla de rutas",
-        error
-      );
-    }
-  }
-
-  // Verificar si la tabla está vacía
-  private async isTableEmpty(): Promise<boolean> {
-    const sql = `SELECT COUNT(*) AS count FROM routes`;
-    try {
-      const [rows] = await this.pool.query<RowDataPacket[]>(sql);
-      return rows[0].count === 0;
-    } catch (error) {
-      throw new DatabaseError(
-        "Error al verificar si la tabla está vacía",
-        error
-      );
-    }
-  }
-
-  // Insertar rutas predeterminadas
-  private async insertDefaultRoutes(): Promise<void> {
-    const sql = `
-      INSERT INTO routes (name, capacity, available) VALUES 
-      (?, ?, ?), 
-      (?, ?, ?), 
-      (?, ?, ?);
-    `;
-    const defaultRoutes = [
-      "Ruta A",
-      50,
-      true,
-      "Ruta B",
-      30,
-      true,
-      "Ruta C",
-      70,
-      true,
-    ];
-
-    try {
-      await this.pool.execute<ResultSetHeader>(sql, defaultRoutes);
-    } catch (error) {
-      throw new DatabaseError("Error al insertar rutas predeterminadas", error);
-    }
-  }
-
-  // Encontrar rutas disponibles
+  /**
+   * Encuentra rutas disponibles
+   * @returns Lista de rutas disponibles
+   */
   public async findAvailableRoutes(): Promise<RouteRow[]> {
     const sql = `SELECT * FROM routes WHERE available = 1`;
-    const [rows] = await this.pool.execute<RouteRow[]>(sql);
-    return rows;
+    
+    try {
+      const [rows] = await this.pool.execute<RowDataPacket[]>(sql);
+      return rows as RouteRow[];
+    } catch (error) {
+      throw new DatabaseError("Error finding available routes", error);
+    }
   }
 
-  // Encontrar transportista por ID
+  /**
+   * Encuentra un transportista por su ID
+   * @param transporterId ID del transportista
+   * @returns Datos del transportista o null si no existe
+   */
   public async findTransporterById(
     transporterId: number
   ): Promise<TransporterDTO | null> {
     const sql = `SELECT * FROM transporters WHERE id = ? AND available = 1`;
-    const [rows] = await this.pool.execute<TransporterRow[]>(sql, [
-      transporterId,
-    ]);
-    return rows.length > 0 ? rows[0] : null;
+    
+    try {
+      const [rows] = await this.pool.execute<RowDataPacket[]>(sql, [transporterId]);
+      return rows.length > 0 ? rows[0] as TransporterDTO : null;
+    } catch (error) {
+      throw new DatabaseError("Error finding transporter by ID", error);
+    }
   }
 
-  // Asignar una ruta a un envío
+  /**
+   * Asigna una ruta a un envío
+   * @param assignmentData Datos de asignación (id del envío, id de la ruta, id del transportista)
+   * @returns Resultado de la operación
+   */
   public async assignRouteToShipment({
     id,
     routeId,
     transporterId,
   }: AssingShipmentDTO): Promise<boolean> {
+    const connection = await this.pool.getConnection();
     
-    const sql = `UPDATE shipments SET route_id = ?, transporter_id = ? WHERE id = ?`;
-    const [result] = await this.pool.execute<ResultSetHeader>(sql, [
-      routeId,
-      transporterId,
-      id,
-    ]);
+    try {
+      await connection.beginTransaction();
 
-    const sqlTransporters = `UPDATE transporters SET available = ? WHERE id = ?`;
-    const [resultTransporter] = await this.pool.execute<ResultSetHeader>(
-      sqlTransporters,
-      [0, transporterId]
-    );
+      // Actualizar el envío con la ruta y transportista asignados
+      const [shipmentResult] = await connection.execute<ResultSetHeader>(
+        `UPDATE shipments SET route_id = ?, transporter_id = ? WHERE id = ?`,
+        [routeId, transporterId, id]
+      );
 
+      // Marcar el transportista como no disponible
+      const [transporterResult] = await connection.execute<ResultSetHeader>(
+        `UPDATE transporters SET available = ? WHERE id = ?`,
+        [0, transporterId]
+      );
 
-
-    
-    return result.affectedRows > 0 && resultTransporter.affectedRows > 0;
+      // Verificar si ambas operaciones fueron exitosas
+      const success = shipmentResult.affectedRows > 0 && transporterResult.affectedRows > 0;
+      
+      if (success) {
+        await connection.commit();
+      } else {
+        await connection.rollback();
+      }
+      
+      return success;
+    } catch (error) {
+      await connection.rollback();
+      throw new DatabaseError("Error assigning route to shipment", error);
+    } finally {
+      connection.release();
+    }
   }
 
-  // Todas las rutas disponibles
+  /**
+   * Obtiene todas las rutas formateadas para selectores (label/value)
+   * @returns Lista completa de rutas
+   */
   public async allRoutes(): Promise<RouteRow[]> {
     const sql = `SELECT name as label, id as value FROM routes`;
-    const [rows] = await this.pool.execute<RouteRow[]>(sql);
-    return rows;
+    
+    try {
+      const [rows] = await this.pool.execute<RowDataPacket[]>(sql);
+      return rows as RouteRow[];
+    } catch (error) {
+      throw new DatabaseError("Error fetching all routes", error);
+    }
   }
 
+  /**
+   * Obtiene todos los transportistas formateados para selectores (label/value)
+   * @returns Lista completa de transportistas
+   */
   public async allTransporters(): Promise<TransporterRow[]> {
     const sql = `SELECT name as label, id as value FROM transporters`;
-    const [rows] = await this.pool.execute<TransporterRow[]>(sql);
-    return rows;
+    
+    try {
+      const [rows] = await this.pool.execute<RowDataPacket[]>(sql);
+      return rows as TransporterRow[];
+    } catch (error) {
+      throw new DatabaseError("Error fetching all transporters", error);
+    }
   }
 }
 

@@ -1,3 +1,6 @@
+import { RowDataPacket } from "mysql2";
+import { ShipmentDTO } from "../../application/dto/shipment.dto";
+
 export enum ShipmentStatus {
   PENDING = "En espera",
   PROCESSING = "En procesamiento",
@@ -52,4 +55,30 @@ export interface Filter {
   startDate?:string;
   endDate?:string;
   status?:string
+}
+
+
+export interface ShipmentRow
+  extends RowDataPacket,
+    Omit<ShipmentDTO, "createdAt" | "updatedAt"> {
+  user_id: number;
+  package_info: string;
+  destination_address: string;
+  exit_address: string;
+  tracking_number: string;
+  estimated_delivery_date: Date;
+  transporter_id?: number;
+  route_id?: number;
+  created_at: Date;
+  updated_at: Date;
+  route?: string;
+  transporter?: string;
+}
+
+// Tipo para shipments con información adicional
+export interface ShipmentWithRouteInfo extends Omit<ShipmentDTO, "createdAt" | "updatedAt"> {
+  route?: string;
+  transporter?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
