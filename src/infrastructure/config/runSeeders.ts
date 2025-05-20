@@ -13,13 +13,11 @@ async function main() {
     await runTransporterSeeder(pool);
     await runUserSeeder(pool)
     console.log("Seeders ejecutados correctamente");
+    process.exit(0); // termina el proceso si todo va bien
   } catch (error) {
-    console.error("Error ejecutando seeders:", error);
-    process.exit(1);
+    console.error("Error running migrations:", error);
+    process.exit(1); // termina con error
   }
-
-  const app = express();
-  app.listen(3000, () => console.log("Servidor corriendo en puerto 3000"));
 }
 
 main();
