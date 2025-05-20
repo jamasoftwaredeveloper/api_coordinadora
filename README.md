@@ -50,7 +50,8 @@ git clone https://github.com/jamasoftwaredeveloper/api_coordinadora.git
    ```
 
 ### Configuración de la base de datos
-
+#Nota:
+Si trabajas con docker, lo ejecutas en la consola como se muestra en el video.
 1. Ejecuta las migraciones para crear las tablas en la base de datos:
    ```bash
    npx ts-node src/infrastructure/config/runMigrations.ts
@@ -66,7 +67,7 @@ git clone https://github.com/jamasoftwaredeveloper/api_coordinadora.git
 Inicia el servidor con:
 
 ```bash
-npm run start
+npm run dev
 ```
 
 ## Cuentas de prueba
