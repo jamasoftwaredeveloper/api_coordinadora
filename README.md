@@ -119,3 +119,9 @@ La API sigue principios de arquitectura limpia y está organizada en capas para 
 ## Contribuciones
 
 Si deseas contribuir al proyecto, por favor crea un fork y envía un Pull Request con tus mejoras.
+
+#Liberar puerto 4000, por si está ocupado en windows.
+
+netstat -aon | findstr :4000
+Una vez sepas el PID, ejecuta:
+taskkill /PID <PID> /F
